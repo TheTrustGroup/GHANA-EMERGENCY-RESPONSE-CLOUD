@@ -1,0 +1,144 @@
+/**
+ * Print Styles
+ * Optimized styles for printing dashboards and reports
+ */
+
+@media print {
+  /* Hide non-essential elements */
+  .no-print,
+  button,
+  .sidebar,
+  nav,
+  .top-nav,
+  .print-hide {
+    display: none !important;
+  }
+
+  /* Page setup */
+  @page {
+    size: A4;
+    margin: 1cm;
+  }
+
+  /* Body and layout */
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+
+  /* Remove backgrounds and shadows */
+  * {
+    background: white !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Cards and containers */
+  .card,
+  [class*="Card"] {
+    border: 1px solid #000 !important;
+    page-break-inside: avoid;
+    margin-bottom: 1cm;
+  }
+
+  /* Headers */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: black !important;
+    page-break-after: avoid;
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    page-break-inside: avoid;
+  }
+
+  th,
+  td {
+    border: 1px solid #000 !important;
+    padding: 8pt;
+    text-align: left;
+  }
+
+  th {
+    background: #f0f0f0 !important;
+    font-weight: bold;
+  }
+
+  /* Links */
+  a {
+    color: black !important;
+    text-decoration: underline;
+  }
+
+  a[href^="http"]:after {
+    content: " (" attr(href) ")";
+    font-size: 10pt;
+  }
+
+  /* Charts - convert to static representation */
+  .recharts-wrapper,
+  canvas,
+  svg {
+    display: none !important;
+  }
+
+  .chart-placeholder {
+    display: block !important;
+    border: 1px dashed #000;
+    padding: 20pt;
+    text-align: center;
+    margin: 10pt 0;
+  }
+
+  /* Page breaks */
+  .page-break-before {
+    page-break-before: always;
+  }
+
+  .page-break-after {
+    page-break-after: always;
+  }
+
+  .page-break-inside-avoid {
+    page-break-inside: avoid;
+  }
+
+  /* Print header/footer */
+  @page {
+    @top-center {
+      content: "Ghana Emergency Response Platform";
+      font-size: 10pt;
+      color: #666;
+    }
+    @bottom-right {
+      content: "Page " counter(page) " of " counter(pages);
+      font-size: 10pt;
+      color: #666;
+    }
+  }
+
+  /* Optimize spacing */
+  .space-y-6 > * + * {
+    margin-top: 0.5cm !important;
+  }
+
+  .gap-6 {
+    gap: 0.5cm !important;
+  }
+
+  /* Hide decorative elements */
+  .animate-pulse,
+  .animate-bounce,
+  [class*="animate-"] {
+    animation: none !important;
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "Ghana Emergency Response",
+  "short_name": "GERCC",
+  "description": "Report emergencies and get help fast",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#dc2626",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["emergency", "public-safety"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Report Emergency",
+      "short_name": "Report",
+      "description": "Quickly report an emergency",
+      "url": "/report",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

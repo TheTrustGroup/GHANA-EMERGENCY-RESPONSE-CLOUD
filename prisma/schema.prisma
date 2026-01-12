@@ -1,0 +1,356 @@
+// Prisma Schema for Ghana Emergency Response Platform
+// Production-grade schema with proper relationships, indexes, and constraints
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum UserRole {
+  CITIZEN
+  RESPONDER
+  DISPATCHER
+  AGENCY_ADMIN
+  SYSTEM_ADMIN
+}
+
+enum UserStatus {
+  AVAILABLE
+  DISPATCHED
+  EN_ROUTE
+  ON_SCENE
+  OFF_DUTY
+}
+
+enum AgencyType {
+  NADMO
+  FIRE_SERVICE
+  POLICE
+  AMBULANCE
+  PRIVATE_RESPONDER
+}
+
+enum IncidentCategory {
+  FIRE
+  MEDICAL
+  ACCIDENT
+  NATURAL_DISASTER
+  CRIME
+  INFRASTRUCTURE
+  OTHER
+}
+
+enum IncidentSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum IncidentStatus {
+  REPORTED
+  DISPATCHED
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+  CANCELLED
+}
+
+enum DispatchStatus {
+  DISPATCHED
+  ACCEPTED
+  EN_ROUTE
+  ARRIVED
+  COMPLETED
+  CANCELLED
+}
+
+enum UpdateType {
+  STATUS_CHANGE
+  ASSIGNMENT
+  RESPONDER_UPDATE
+  MEDIA_ADDED
+  NOTE_ADDED
+  SYSTEM_UPDATE
+}
+
+enum NotificationType {
+  INCIDENT_CREATED
+  INCIDENT_ASSIGNED
+  DISPATCH_ASSIGNMENT
+  STATUS_UPDATE
+  MESSAGE_RECEIVED
+  SYSTEM_ALERT
+}
+
+// ============================================================================
+// MODELS
+// ============================================================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  phone         String?   @unique
+  name          String
+  passwordHash  String
+  role          UserRole
+  agencyId      String?
+  isActive      Boolean   @default(true)
+  emailVerified DateTime?
+  phoneVerified DateTime?
+  
+  // Location tracking (for responders)
+  lastLatitude       Float?
+  lastLongitude      Float?
+  lastLocationUpdate DateTime?
+  
+  // Status (for responders)
+  status        UserStatus @default(AVAILABLE)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastLoginAt   DateTime?
+
+  // Relations
+  agency              Agency?              @relation(fields: [agencyId], references: [id], onDelete: SetNull)
+  incidentsReported   Incident[]           @relation("ReportedBy")
+  dispatchAssignments DispatchAssignment[]
+  messages            Message[]
+  incidentUpdates     IncidentUpdate[]
+  auditLogs           AuditLog[]
+  notifications       Notification[]
+
+  @@index([email])
+  @@index([phone])
+  @@index([agencyId])
+  @@index([role])
+  @@index([isActive])
+  @@index([status])
+  @@map("users")
+}
+
+model Agency {
+  id           String     @id @default(cuid())
+  name         String
+  type         AgencyType
+  description String?
+  contactEmail String
+  contactPhone String
+  address      String
+  region       String
+  district     String
+  latitude     Float
+  longitude    Float
+  
+  // Coverage area (radius in km)
+  coverageRadius Float @default(50)
+  
+  // Status
+  isActive     Boolean    @default(true)
+  capacity     Int        @default(10) // Max concurrent incidents
+  
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relations
+  users               User[]               @relation
+  incidents           Incident[]
+  dispatchAssignments DispatchAssignment[]
+
+  @@index([type])
+  @@index([region])
+  @@index([isActive])
+  @@index([latitude, longitude])
+  @@map("agencies")
+}
+
+model Incident {
+  id          String    @id @default(cuid())
+  
+  // Classification
+  category    IncidentCategory
+  severity    IncidentSeverity
+  status    IncidentStatus   @default(REPORTED)
+  
+  // Details
+  title       String
+  description String?
+  
+  // Location
+  latitude    Float
+  longitude   Float
+  address     String?
+  region      String
+  district    String
+  
+  // Media
+  mediaUrls   String[] // S3/R2 URLs
+  
+  // Reporter
+  reportedById    String?
+  reportedBy      User?      @relation("ReportedBy", fields: [reportedById], references: [id], onDelete: SetNull)
+  reporterPhone   String?    // For anonymous reports
+  reporterName    String?    // For anonymous reports
+  
+  // Assignment
+  assignedAgencyId String?
+  assignedAgency   Agency?   @relation(fields: [assignedAgencyId], references: [id], onDelete: SetNull)
+  priority        Int       @default(3) // 1-5 (5 = highest)
+  
+  // Metrics
+  estimatedAffectedPeople Int?
+  responseTime            Int? // Minutes from report to dispatch
+  resolutionTime          Int? // Minutes from report to resolution
+  
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  dispatchedAt DateTime?
+  resolvedAt  DateTime?
+  closedAt    DateTime?
+  
+  // Relations
+  dispatches  DispatchAssignment[]
+  updates     IncidentUpdate[]
+  messages    Message[]
+  
+  @@index([status])
+  @@index([severity])
+  @@index([category])
+  @@index([latitude, longitude])
+  @@index([region, district])
+  @@index([createdAt])
+  @@index([assignedAgencyId])
+  @@map("incidents")
+}
+
+model DispatchAssignment {
+  id          String    @id @default(cuid())
+  
+  // Incident
+  incidentId  String
+  incident    Incident  @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  
+  // Agency
+  agencyId    String
+  agency      Agency    @relation(fields: [agencyId], references: [id], onDelete: Restrict)
+  
+  // Responder
+  responderId String
+  responder   User      @relation(fields: [responderId], references: [id], onDelete: Restrict)
+  
+  // Status
+  status      DispatchStatus @default(DISPATCHED)
+  priority    Int       @default(3) // 1-5
+  
+  // Notes
+  dispatchNotes String?
+  completionNotes String?
+  
+  // Location tracking
+  currentLatitude  Float?
+  currentLongitude Float?
+  
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  dispatchedAt DateTime @default(now())
+  acceptedAt  DateTime?
+  enRouteAt   DateTime?
+  arrivedAt   DateTime?
+  completedAt DateTime?
+  
+  @@index([incidentId])
+  @@index([agencyId])
+  @@index([responderId])
+  @@index([status])
+  @@map("dispatch_assignments")
+}
+
+model Message {
+  id              String   @id @default(cuid())
+  incidentId      String
+  senderId        String
+  content         String
+  isSystemMessage Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  // Relations
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  sender   User     @relation(fields: [senderId], references: [id], onDelete: Restrict)
+
+  @@index([incidentId])
+  @@index([senderId])
+  @@index([createdAt])
+  @@map("messages")
+}
+
+model IncidentUpdate {
+  id         String   @id @default(cuid())
+  incidentId String
+  incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  updateType UpdateType
+  content    String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([incidentId])
+  @@index([createdAt])
+  @@map("incident_updates")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  entity    String
+  entityId  String
+  changes   Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([action])
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model Notification {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title             String
+  message           String
+  type              NotificationType
+  
+  // Related entity
+  relatedEntityType String?
+  relatedEntityId   String?
+  
+  // Status
+  isRead            Boolean  @default(false)
+  sentViaSms        Boolean  @default(false)
+  sentViaPush       Boolean  @default(false)
+  
+  createdAt         DateTime @default(now())
+  readAt            DateTime?
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
