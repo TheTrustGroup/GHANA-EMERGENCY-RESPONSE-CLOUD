@@ -19,7 +19,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { formatGhanaPhone } from '@/server/db/utils';
 
 function SignInContent() {
   const router = useRouter();
@@ -44,10 +43,12 @@ function SignInContent() {
     setError(null);
 
     try {
-      // Normalize phone number if using phone login
-      let identifier = data.identifier;
-      if (usePhone && identifier.match(/^(\+?233|0)/)) {
-        identifier = formatGhanaPhone(identifier);
+      // Normalize identifier - lowercase email, keep phone as-is (server will format it)
+      let identifier = data.identifier.trim();
+      
+      // Only lowercase if it's an email (contains @)
+      if (!usePhone && identifier.includes('@')) {
+        identifier = identifier.toLowerCase();
       }
 
       const result = await signIn('credentials', {

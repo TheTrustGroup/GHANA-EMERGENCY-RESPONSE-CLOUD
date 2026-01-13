@@ -31,26 +31,32 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Email/phone and password are required');
         }
 
-        // Normalize identifier early
-        const identifier = credentials.identifier.toLowerCase().trim();
-        const rateLimitKey = `login:${identifier}`;
+        // Trim identifier but don't lowercase yet - need to check if it's email or phone first
+        const rawIdentifier = credentials.identifier.trim();
+        const rateLimitKey = `login:${rawIdentifier.toLowerCase()}`;
 
         // Check rate limiting (but don't block on first few attempts)
         if (checkRateLimit(rateLimitKey, 10, 15 * 60 * 1000)) {
-          console.error(`[AUTH] Rate limit exceeded for: ${identifier}`);
+          console.error(`[AUTH] Rate limit exceeded for: ${rawIdentifier}`);
           throw new Error(
             'Too many login attempts. Please try again in 15 minutes.'
           );
         }
 
         try {
-          // Normalize phone number if it looks like a phone
-          let normalizedIdentifier = identifier;
-          if (identifier.match(/^(\+?233|0)/)) {
-            normalizedIdentifier = formatGhanaPhone(identifier);
-            console.log(`[AUTH] Normalized phone: ${identifier} -> ${normalizedIdentifier}`);
-          } else {
+          // Determine if identifier is email or phone
+          const isEmail = rawIdentifier.includes('@');
+          
+          // Normalize based on type
+          let normalizedIdentifier: string;
+          if (isEmail) {
+            // For email, lowercase it
+            normalizedIdentifier = rawIdentifier.toLowerCase();
             console.log(`[AUTH] Using email: ${normalizedIdentifier}`);
+          } else {
+            // For phone, format it but preserve original for rate limiting
+            normalizedIdentifier = formatGhanaPhone(rawIdentifier);
+            console.log(`[AUTH] Normalized phone: ${rawIdentifier} -> ${normalizedIdentifier}`);
           }
 
           // Validate credentials
@@ -60,7 +66,7 @@ export const authOptions: NextAuthOptions = {
           );
 
           if (!user) {
-            console.error(`[AUTH] Invalid credentials for: ${identifier}`);
+            console.error(`[AUTH] Invalid credentials for: ${rawIdentifier}`);
             // Don't throw here - let it return null so NextAuth handles it
             return null;
           }
