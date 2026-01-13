@@ -216,6 +216,7 @@ export async function handleDispatchAssignment(assignmentData: {
   // 8. Create audit log
   await prisma.audit_logs.create({
     data: {
+      id: `audit-${Date.now()}-${Math.random().toString(36).substring(7)}`,
       userId: assignmentData.dispatcherId,
       action: 'CREATE_DISPATCH',
       entity: 'DispatchAssignment',
