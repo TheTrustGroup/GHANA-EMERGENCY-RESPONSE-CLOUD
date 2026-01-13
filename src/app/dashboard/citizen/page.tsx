@@ -9,7 +9,6 @@ import {
   AlertCircle, 
   Phone, 
   MapPin, 
-  Clock, 
   ChevronRight,
   Bell,
   Shield,
