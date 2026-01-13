@@ -32,7 +32,7 @@ async function main(): Promise<void> {
 
   // Clear existing data (in reverse order of dependencies)
   console.log('🧹 Cleaning existing data...');
-  await prisma.notification.deleteMany();
+  await prisma.notifications.deleteMany();
   await prisma.auditLog.deleteMany();
   await prisma.incidentUpdate.deleteMany();
   await prisma.message.deleteMany();
