@@ -22,10 +22,10 @@ export const pusherClient = new PusherClient(
 export function useIncidentUpdates(callback: (data: any) => void) {
   useEffect(() => {
     const channel = pusherClient.subscribe('incidents-global');
-    
+
     channel.bind('incident-created', callback);
     channel.bind('incident-updated', callback);
-    
+
     return () => {
       channel.unbind_all();
       channel.unsubscribe();
@@ -39,11 +39,11 @@ export function useDispatchUpdates(
 ) {
   useEffect(() => {
     if (!responderId) return;
-    
+
     const channel = pusherClient.subscribe(`user-${responderId}`);
-    
+
     channel.bind('dispatch-assigned', callback);
-    
+
     return () => {
       channel.unbind_all();
       channel.unsubscribe();
@@ -57,11 +57,11 @@ export function useResponderTracking(
 ) {
   useEffect(() => {
     if (!responderId) return;
-    
+
     const channel = pusherClient.subscribe(`responder-${responderId}`);
-    
+
     channel.bind('location-updated', callback);
-    
+
     return () => {
       channel.unbind_all();
       channel.unsubscribe();
@@ -72,9 +72,9 @@ export function useResponderTracking(
 export function useSystemAlerts(callback: (alert: any) => void) {
   useEffect(() => {
     const channel = pusherClient.subscribe('system-alerts');
-    
+
     channel.bind('alert', callback);
-    
+
     return () => {
       channel.unbind_all();
       channel.unsubscribe();

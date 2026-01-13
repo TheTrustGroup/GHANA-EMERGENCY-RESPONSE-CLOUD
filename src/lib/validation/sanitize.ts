@@ -163,7 +163,7 @@ export function sanitizeUrl(url: string): string | null {
 
   try {
     const parsed = new URL(url);
-    
+
     // Only allow http and https
     if (!['http:', 'https:'].includes(parsed.protocol)) {
       return null;

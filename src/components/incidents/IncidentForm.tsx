@@ -160,7 +160,7 @@ export function IncidentForm({ initialData, onSubmit, onCancel }: IncidentFormPr
     } else {
       // Convert form data to API format
       const formData = data as IncidentFormData;
-      
+
       // Map lowercase category to uppercase enum
       const categoryMap: Record<string, 'FIRE' | 'MEDICAL' | 'ACCIDENT' | 'NATURAL_DISASTER' | 'CRIME' | 'INFRASTRUCTURE' | 'OTHER'> = {
         'fire': 'FIRE',
@@ -171,7 +171,7 @@ export function IncidentForm({ initialData, onSubmit, onCancel }: IncidentFormPr
         'infrastructure': 'INFRASTRUCTURE',
         'other': 'OTHER',
       };
-      
+
       const apiData = {
         title: formData.title,
         description: formData.description,
@@ -199,7 +199,7 @@ export function IncidentForm({ initialData, onSubmit, onCancel }: IncidentFormPr
     <form onSubmit={onSubmitForm} className="space-y-6">
       {/* CSRF Token */}
       <CSRFTokenInput />
-      
+
       {/* Progress Indicator */}
       <div className="space-y-2">
         <div className="flex items-center justify-between text-sm">

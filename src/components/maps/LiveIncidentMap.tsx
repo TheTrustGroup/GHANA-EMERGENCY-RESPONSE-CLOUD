@@ -140,7 +140,7 @@ export function LiveIncidentMap({
       }),
       'top-right'
     );
-    
+
     // Ensure map is ready before adding markers
     map.current.on('load', () => {
       // Map is fully loaded and ready for markers
@@ -157,15 +157,15 @@ export function LiveIncidentMap({
   // Update map style when prop changes
   useEffect(() => {
     if (!map.current) return;
-    
+
     const styleMap: Record<string, string> = {
       'satellite-streets': 'mapbox://styles/mapbox/satellite-streets-v12',
       'satellite': 'mapbox://styles/mapbox/satellite-v9',
       'streets': 'mapbox://styles/mapbox/streets-v12',
     };
-    
+
     const newStyle = styleMap[mapStyle] || mapStyle || 'mapbox://styles/mapbox/streets-v12';
-    
+
     // Only update if style has changed
     if (currentStyleRef.current !== newStyle) {
       // Check if map is loaded before accessing style

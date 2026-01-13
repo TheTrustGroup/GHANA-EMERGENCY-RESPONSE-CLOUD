@@ -33,7 +33,7 @@ export async function generateReport(
   try {
     // 1. Calculate date range
     const dateRange = calculateDateRange(config.dateRange);
-    
+
     // 2. Build filters
     const where: any = {
       createdAt: {
@@ -100,7 +100,7 @@ export async function generateReport(
     const resolvedIncidents = incidents.filter(
       (inc) => inc.status === IncidentStatus.RESOLVED || inc.status === IncidentStatus.CLOSED
     );
-    
+
     const responseTimes = resolvedIncidents
       .map((inc) => calculateResponseTime(inc))
       .filter((time): time is number => time !== null);
@@ -127,7 +127,7 @@ export async function generateReport(
 
     // 6. Generate PDF (would use formatReportForPDF in production)
     // const pdfData = formatReportForPDF(config, reportData, sections, dateRange);
-    
+
     // 7. Save to database
     // Note: In production, you'd create proper Prisma models for reports
     // For now, return a mock structure

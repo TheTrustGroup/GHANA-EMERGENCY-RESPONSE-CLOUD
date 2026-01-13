@@ -97,9 +97,7 @@ export async function handleNewIncident(incidentData: {
 
   // 5. If CRITICAL, send SMS to on-duty responders
   if (incident.severity === 'CRITICAL') {
-    // TODO: Implement SMS sending
-    console.log('CRITICAL INCIDENT - SMS notifications would be sent here');
-  }
+    // TODO: Implement SMS sending  }
 
   // 6. Create audit log
   if (incidentData.reportedById) {
@@ -189,9 +187,7 @@ export async function handleDispatchAssignment(assignmentData: {
       priority: assignmentData.priority >= 4 ? 'critical' : 'high',
     });
 
-    // TODO: Send SMS
-    console.log(`SMS would be sent to ${assignment.users.phone}`);
-  }
+    // TODO: Send SMS  }
 
   // 6. Broadcast to all relevant channels
   await broadcastDispatchAssignment({

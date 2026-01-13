@@ -137,9 +137,9 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           ) : icon && iconPosition === 'left' ? (
             <span className="flex-shrink-0">{icon}</span>
           ) : null}
-          
+
           {children}
-          
+
           {!loading && icon && iconPosition === 'right' ? (
             <span className="flex-shrink-0">{icon}</span>
           ) : null}

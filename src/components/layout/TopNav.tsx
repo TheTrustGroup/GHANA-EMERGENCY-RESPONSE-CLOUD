@@ -143,9 +143,9 @@ export function TopNav({ onMenuClick }: TopNavProps) {
           <div className="flex items-center space-x-3">
             {/* Mobile Search */}
             {isMobile && (
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => router.push('/dashboard/search')}
                 className="rounded-xl hover:bg-white/10"
               >
@@ -195,8 +195,8 @@ export function TopNav({ onMenuClick }: TopNavProps) {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-white/10" />
-                <DropdownMenuItem 
-                  onClick={handleLogout} 
+                <DropdownMenuItem
+                  onClick={handleLogout}
                   className="rounded-lg px-3 py-2 cursor-pointer text-red-600 hover:bg-red-50 focus:bg-red-50"
                 >
                   <LogOut className="mr-3 h-4 w-4" />

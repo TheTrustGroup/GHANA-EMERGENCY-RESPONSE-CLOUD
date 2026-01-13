@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { trpc } from '@/lib/trpc/client';
 import { Button } from '@/components/ui/premium/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/premium/Card';
-import { 
+import {
   Activity,
   AlertTriangle,
   CheckCircle2,
@@ -21,7 +21,7 @@ import {
 
 export default function SystemAdminMissionControl() {
   const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d'>('24h');
-  
+
   const { data: systemStats, refetch } = trpc.system.getSystemStats.useQuery({ timeRange });
   const { data: systemHealth } = trpc.system.getHealth.useQuery(undefined, {
     refetchInterval: 10000,
@@ -32,12 +32,12 @@ export default function SystemAdminMissionControl() {
 
   return (
     <div className="min-h-screen bg-slate-950">
-      
+
       {/* MISSION CONTROL TOP BAR */}
       <div className="sticky top-0 z-50 border-b border-slate-800 bg-slate-900">
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
-            
+
             {/* LEFT */}
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-3">
@@ -49,16 +49,16 @@ export default function SystemAdminMissionControl() {
                     SYSTEM CONTROL
                   </h1>
                   <p className="font-mono text-xs text-blue-400">
-                    Ghana Emergency Platform • {new Date().toLocaleString('en-US', { 
-                      hour: '2-digit', 
+                    Ghana Emergency Platform • {new Date().toLocaleString('en-US', {
+                      hour: '2-digit',
                       minute: '2-digit',
                       second: '2-digit',
-                      hour12: false 
+                      hour12: false
                     })}
                   </p>
                 </div>
               </div>
-              
+
               {/* Live stats */}
               <div className="flex items-center gap-3">
                 {criticalCount > 0 && (
@@ -82,7 +82,7 @@ export default function SystemAdminMissionControl() {
 
             {/* RIGHT */}
             <div className="flex items-center gap-2">
-              <select 
+              <select
                 value={timeRange}
                 onChange={(e) => setTimeRange(e.target.value as '24h' | '7d' | '30d')}
                 className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm font-semibold text-white"
@@ -91,7 +91,7 @@ export default function SystemAdminMissionControl() {
                 <option value="7d">Last 7 Days</option>
                 <option value="30d">Last 30 Days</option>
               </select>
-              
+
               <Button
                 size="sm"
                 variant="ghost"
@@ -99,14 +99,14 @@ export default function SystemAdminMissionControl() {
                 icon={<RefreshCw className="h-4 w-4" />}
                 onClick={() => refetch()}
               />
-              
+
               <Button
                 size="sm"
                 variant="ghost"
                 className="text-slate-400 hover:text-white"
                 icon={<Settings className="h-4 w-4" />}
               />
-              
+
               <Button
                 size="sm"
                 className="bg-blue-600 hover:bg-blue-700"
@@ -147,7 +147,7 @@ export default function SystemAdminMissionControl() {
 
       {/* MAIN GRID */}
       <div className="space-y-6 p-6">
-        
+
         {/* ROW 1: KEY METRICS */}
         <div className="grid grid-cols-4 gap-6">
           <SystemMetric
@@ -182,7 +182,7 @@ export default function SystemAdminMissionControl() {
 
         {/* ROW 2: SYSTEM HEALTH + MAP */}
         <div className="grid grid-cols-3 gap-6">
-          
+
           {/* System Health */}
           <Card className="border-slate-800 bg-slate-900">
             <CardHeader className="border-b border-slate-800">

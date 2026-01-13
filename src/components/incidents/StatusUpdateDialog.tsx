@@ -56,27 +56,27 @@ const getValidNextStatuses = (currentStatus: IncidentStatus, userRole: string): 
         return [IncidentStatus.DISPATCHED, IncidentStatus.IN_PROGRESS];
       }
       return [];
-    
+
     case IncidentStatus.DISPATCHED:
       return [IncidentStatus.IN_PROGRESS, IncidentStatus.RESOLVED];
-    
+
     case IncidentStatus.IN_PROGRESS:
       // Responders+ or Agency Admins+ can resolve
       if (['RESPONDER', 'AGENCY_ADMIN', 'SYSTEM_ADMIN'].includes(userRole)) {
         return [IncidentStatus.RESOLVED];
       }
       return [];
-    
+
     case IncidentStatus.RESOLVED:
       // Agency Admins+ can close
       if (['AGENCY_ADMIN', 'SYSTEM_ADMIN'].includes(userRole)) {
         return [IncidentStatus.CLOSED];
       }
       return [];
-    
+
     case IncidentStatus.CLOSED:
       return []; // Cannot change from closed
-    
+
     default:
       return [];
   }

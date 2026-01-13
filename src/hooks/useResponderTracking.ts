@@ -57,17 +57,17 @@ export function useResponderTracking({
         // Update marker position with high accuracy
         const currentLngLat = existingMarker.getLngLat();
         const newLngLat = [responder.longitude, responder.latitude] as [number, number];
-        
+
         // Calculate distance moved (in degrees)
         const latDiff = Math.abs(currentLngLat.lat - newLngLat[1]);
         const lngDiff = Math.abs(currentLngLat.lng - newLngLat[0]);
-        
+
         // Only animate if moved significantly (more than ~10 meters)
         if (prevPos && (latDiff > 0.0001 || lngDiff > 0.0001)) {
           // Smooth animation for significant movements
           const startPos = [prevPos.lng, prevPos.lat] as [number, number];
           const endPos = newLngLat;
-          
+
           let progress = 0;
           const duration = 500; // Faster updates for real-time tracking
           const startTime = Date.now();
@@ -116,7 +116,7 @@ export function useResponderTracking({
           div.textContent = text;
           return div.innerHTML;
         };
-        
+
         const marker = new mapboxgl.Marker(el)
           .setLngLat([responder.longitude, responder.latitude])
           .setPopup(

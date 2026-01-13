@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
     // For Supabase, we'll return a token-based upload approach
     // The client will upload directly using the Supabase client
     // Return the file path and public URL instead of presigned URL
-    
+
     // Public URL (for public buckets)
     const { data: publicUrlData } = supabase.storage
       .from(BUCKET_NAME)

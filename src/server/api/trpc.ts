@@ -50,8 +50,7 @@ const loggingMiddleware = t.middleware(async ({ path, type, next }) => {
   const result = await next();
   const duration = Date.now() - start;
 
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`[tRPC] ${type.toUpperCase()} ${path} - ${duration}ms`);
+  if (process.env.NODE_ENV === 'development') {} ${path} - ${duration}ms`);
   }
 
   return result;
@@ -76,7 +75,7 @@ const rateLimitMiddleware = t.middleware(async ({ ctx, path, type, next }) => {
   // Simple rate limiting: 100 mutations per 15 minutes per user
   const rateLimitKey = `trpc:${identifier}:${path}`;
   const { memoryCache } = await import('@/lib/cache/memory-cache');
-  
+
   const currentCount = memoryCache.get<number>(rateLimitKey) || 0;
   const maxRequests = 100;
   const windowMs = 15 * 60 * 1000; // 15 minutes

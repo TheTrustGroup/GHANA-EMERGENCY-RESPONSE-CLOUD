@@ -12,7 +12,7 @@ export const haptics = {
       navigator.vibrate(10);
     }
   },
-  
+
   /**
    * Medium haptic feedback (20ms)
    * Use for: Important actions, confirmations
@@ -22,7 +22,7 @@ export const haptics = {
       navigator.vibrate(20);
     }
   },
-  
+
   /**
    * Heavy haptic feedback (30ms)
    * Use for: Critical actions, errors
@@ -32,7 +32,7 @@ export const haptics = {
       navigator.vibrate(30);
     }
   },
-  
+
   /**
    * Success pattern haptic feedback
    * Use for: Successful operations, confirmations
@@ -42,7 +42,7 @@ export const haptics = {
       navigator.vibrate([10, 50, 10]);
     }
   },
-  
+
   /**
    * Error pattern haptic feedback
    * Use for: Errors, failures, warnings

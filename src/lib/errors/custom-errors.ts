@@ -79,7 +79,7 @@ export function handleError(error: unknown): {
   // Prisma errors
   if (error && typeof error === 'object' && 'code' in error) {
     const prismaError = error as { code: string; meta?: any };
-    
+
     if (prismaError.code === 'P2002') {
       return {
         message: 'A record with this value already exists',
@@ -87,7 +87,7 @@ export function handleError(error: unknown): {
         code: 'DUPLICATE_ENTRY',
       };
     }
-    
+
     if (prismaError.code === 'P2025') {
       return {
         message: 'Record not found',

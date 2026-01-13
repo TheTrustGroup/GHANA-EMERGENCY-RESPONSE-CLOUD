@@ -51,7 +51,7 @@ export async function exportToExcel(
   try {
     // Dynamic import to avoid SSR issues
     const XLSX = await import('xlsx');
-    
+
     if (data.length === 0) return;
 
     const worksheet = XLSX.utils.json_to_sheet(data);
@@ -78,11 +78,11 @@ export async function exportToPDF(
     const autoTable = (await import('jspdf-autotable')).default;
 
     const doc = new jsPDF();
-    
+
     // Add title
     doc.setFontSize(18);
     doc.text(title, 14, 22);
-    
+
     // Add date
     doc.setFontSize(10);
     doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 30);
@@ -185,12 +185,12 @@ export async function exportReport(
       // Create multiple sheets
       const XLSX = await import('xlsx');
       const workbook = XLSX.utils.book_new();
-      
+
       report.sections.forEach((section, index) => {
         const worksheet = XLSX.utils.json_to_sheet(section.data);
         XLSX.utils.book_append_sheet(workbook, worksheet, section.title.substring(0, 31) || `Sheet${index + 1}`);
       });
-      
+
       XLSX.writeFile(workbook, `${report.title.replace(/\s+/g, '_')}.xlsx`);
       break;
     case 'csv':

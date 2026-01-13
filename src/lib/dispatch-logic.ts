@@ -234,17 +234,17 @@ export function validateDispatchAssignment(
  */
 export function getTimeOfDay(): 'rush_hour' | 'normal' | 'night' {
   const hour = new Date().getHours();
-  
+
   // Rush hour: 7-9 AM and 5-7 PM
   if ((hour >= 7 && hour < 9) || (hour >= 17 && hour < 19)) {
     return 'rush_hour';
   }
-  
+
   // Night: 10 PM - 6 AM
   if (hour >= 22 || hour < 6) {
     return 'night';
   }
-  
+
   return 'normal';
 }
 

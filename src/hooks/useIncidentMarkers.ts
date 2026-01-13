@@ -65,7 +65,7 @@ export function useIncidentMarkers({
         // Update existing marker position with high accuracy
         const currentLngLat = existingMarker.getLngLat();
         const newLngLat = [incident.longitude, incident.latitude] as [number, number];
-        
+
         // Only update if position actually changed (avoid unnecessary updates)
         // 0.0001 degrees ≈ 11 meters - ensures accurate positioning
         if (
@@ -103,7 +103,7 @@ export function useIncidentMarkers({
               <div><span class="font-medium">Status:</span> ${escapeHtml(incident.status)}</div>
               <div><span class="font-medium">Location:</span> ${escapeHtml(incident.district)}, ${escapeHtml(incident.region)}</div>
               <div class="mt-2">
-                <button 
+                <button
                   class="w-full rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700"
                   onclick="window.open('/dashboard/incidents/${incident.id}', '_blank')"
                 >

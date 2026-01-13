@@ -6,13 +6,13 @@ import { useIncidentUpdates } from '@/lib/realtime/pusher-client';
 import { Button } from '@/components/ui/premium/Button';
 import { Card, CardContent } from '@/components/ui/premium/Card';
 import { Badge } from '@/components/ui/premium/Badge';
-import { 
-  AlertCircle, 
-  Clock, 
-  MapPin, 
-  Filter, 
-  RefreshCw, 
-  Users, 
+import {
+  AlertCircle,
+  Clock,
+  MapPin,
+  Filter,
+  RefreshCw,
+  Users,
   Building2,
   Maximize2,
   Zap,
@@ -33,7 +33,7 @@ export default function DispatchCommandCenter() {
   const [selectedIncident, setSelectedIncident] = useState<string | null>(null);
   const [mapFullscreen, setMapFullscreen] = useState(false);
   const [filter, setFilter] = useState<'unassigned' | 'active' | 'all'>('unassigned');
-  
+
   const { data: incidents, refetch } = trpc.incidents.getAll.useQuery({
     page: 1,
     pageSize: 100,
@@ -41,10 +41,10 @@ export default function DispatchCommandCenter() {
     sortOrder: 'desc',
     status: filter === 'unassigned' ? 'REPORTED' : filter === 'active' ? undefined : undefined,
   });
-  
+
   const { data: mapIncidents } = trpc.incidents.getActiveForMap.useQuery();
   const { data: stats } = trpc.analytics.getDispatchStats.useQuery();
-  
+
   // Real-time updates with audio alert
   useIncidentUpdates(useCallback((data: any) => {
     refetch();
@@ -63,7 +63,7 @@ export default function DispatchCommandCenter() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-slate-950">
-      
+
       {/* COMMAND BAR - Mission Control Style */}
       <div className="relative overflow-hidden border-b border-slate-800 bg-slate-900 shadow-2xl">
         {/* Animated grid background */}
@@ -76,7 +76,7 @@ export default function DispatchCommandCenter() {
 
         <div className="relative px-6 py-4">
           <div className="flex items-center justify-between">
-            
+
             {/* LEFT: System Status */}
             <div className="flex items-center gap-6">
               <motion.div
@@ -99,7 +99,7 @@ export default function DispatchCommandCenter() {
                   </p>
                 </div>
               </motion.div>
-              
+
               {/* Live Stats Pills */}
               <div className="flex items-center gap-3">
                 <motion.div
@@ -204,7 +204,7 @@ export default function DispatchCommandCenter() {
 
       {/* MAIN SPLIT VIEW */}
       <div className="flex flex-1 overflow-hidden">
-        
+
         {/* LEFT: LIVE MAP - 65% */}
         <div className={`${mapFullscreen ? 'w-full' : 'w-[65%]'} relative transition-all duration-300`}>
           <div className="absolute inset-0 bg-slate-900">
@@ -265,14 +265,14 @@ export default function DispatchCommandCenter() {
         {/* RIGHT: INCIDENT FEED - 35% */}
         {!mapFullscreen && (
           <div className="flex w-[35%] flex-col border-l border-slate-800 bg-slate-900">
-            
+
             {/* Feed Header */}
             <div className="border-b border-slate-800 bg-slate-900/50 p-4 backdrop-blur-sm">
               <h2 className="mb-4 flex items-center gap-2 text-lg font-black text-white">
                 <Target className="h-5 w-5 text-red-400" />
                 PRIORITY QUEUE
               </h2>
-              
+
               {/* Filter Tabs */}
               <div className="grid grid-cols-3 gap-2">
                 <button
@@ -366,28 +366,28 @@ export default function DispatchCommandCenter() {
 
 function CommandIncidentCard({ incident, index, onSelect, isSelected }: any) {
   const severityConfig: Record<string, any> = {
-    CRITICAL: { 
+    CRITICAL: {
       bg: 'from-red-900/40 to-red-800/40',
       border: 'border-red-600',
       text: 'text-red-400',
       glow: 'shadow-red-600/50',
       pulse: true,
     },
-    HIGH: { 
+    HIGH: {
       bg: 'from-orange-900/40 to-orange-800/40',
       border: 'border-orange-600',
       text: 'text-orange-400',
       glow: 'shadow-orange-600/50',
       pulse: false,
     },
-    MEDIUM: { 
+    MEDIUM: {
       bg: 'from-yellow-900/40 to-yellow-800/40',
       border: 'border-yellow-600',
       text: 'text-yellow-400',
       glow: 'shadow-yellow-600/50',
       pulse: false,
     },
-    LOW: { 
+    LOW: {
       bg: 'from-blue-900/40 to-blue-800/40',
       border: 'border-blue-600',
       text: 'text-blue-400',
@@ -404,7 +404,7 @@ function CommandIncidentCard({ incident, index, onSelect, isSelected }: any) {
       className={`
         relative cursor-pointer rounded-xl border-2 transition-all
         bg-gradient-to-br ${config.bg}
-        ${isSelected 
+        ${isSelected
           ? `${config.border} ${config.glow} scale-[1.02] shadow-xl`
           : 'border-slate-700 hover:border-slate-600 hover:shadow-lg'
         }
@@ -428,7 +428,7 @@ function CommandIncidentCard({ incident, index, onSelect, isSelected }: any) {
         <div className="mb-3 flex items-start justify-between">
           <div className="min-w-0 flex-1">
             <div className="mb-2 flex flex-wrap items-center gap-2">
-              <Badge 
+              <Badge
                 variant={incident.severity === 'CRITICAL' ? 'critical' : 'high'}
                 size="sm"
                 pulse={incident.severity === 'CRITICAL'}
@@ -444,7 +444,7 @@ function CommandIncidentCard({ incident, index, onSelect, isSelected }: any) {
             </h3>
           </div>
         </div>
-        
+
         <div className="mb-3 flex flex-wrap items-center gap-3 text-xs text-slate-400">
           <div className="flex items-center gap-1">
             <Clock className="h-3 w-3" />

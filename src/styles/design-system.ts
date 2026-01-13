@@ -1,7 +1,7 @@
 /**
  * PREMIUM DESIGN SYSTEM
  * Single Source of Truth for All Design Decisions
- * 
+ *
  * This design system ensures consistency, beauty, and functionality
  * across the entire Ghana Emergency Response Platform.
  */
@@ -22,7 +22,7 @@ export const colors = {
     800: '#991b1b',
     900: '#7f1d1d',
   },
-  
+
   // Secondary - Trust Blue (Professional, Reliable)
   secondary: {
     50: '#eff6ff',
@@ -36,7 +36,7 @@ export const colors = {
     800: '#1e40af',
     900: '#1e3a8a',
   },
-  
+
   // Success - Life Saved Green
   success: {
     50: '#f0fdf4',
@@ -50,7 +50,7 @@ export const colors = {
     800: '#166534',
     900: '#14532d',
   },
-  
+
   // Warning - Attention Orange
   warning: {
     50: '#fff7ed',
@@ -64,7 +64,7 @@ export const colors = {
     800: '#9a3412',
     900: '#7c2d12',
   },
-  
+
   // Neutral - Professional Gray
   neutral: {
     50: '#fafafa',
@@ -79,7 +79,7 @@ export const colors = {
     900: '#171717',
     950: '#0a0a0a',
   },
-  
+
   // Dark Mode - Command Center
   dark: {
     bg: '#0f172a',      // Deep navy
@@ -97,7 +97,7 @@ export const typography = {
     sans: 'var(--font-inter)',
     mono: 'var(--font-mono)',
   },
-  
+
   sizes: {
     // Display (Hero headings)
     display: {
@@ -106,7 +106,7 @@ export const typography = {
       md: '3rem',     // 48px
       sm: '2.25rem',  // 36px
     },
-    
+
     // Headings
     heading: {
       xl: '2rem',     // 32px
@@ -115,7 +115,7 @@ export const typography = {
       sm: '1.125rem', // 18px
       xs: '1rem',     // 16px
     },
-    
+
     // Body
     body: {
       lg: '1.125rem', // 18px
@@ -124,7 +124,7 @@ export const typography = {
       xs: '0.75rem',  // 12px
     },
   },
-  
+
   weights: {
     light: 300,
     normal: 400,
@@ -133,7 +133,7 @@ export const typography = {
     bold: 700,
     black: 900,
   },
-  
+
   lineHeights: {
     tight: 1.25,
     normal: 1.5,
@@ -169,11 +169,11 @@ export const shadows = {
   xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
   '2xl': '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
   inner: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)',
-  
+
   // Colored shadows for emphasis
   primary: '0 10px 25px -5px rgba(239, 68, 68, 0.3)',
   success: '0 10px 25px -5px rgba(34, 197, 94, 0.3)',
-  
+
   // Glow effects
   glow: '0 0 20px rgba(59, 130, 246, 0.5)',
   glowRed: '0 0 20px rgba(239, 68, 68, 0.5)',
@@ -197,7 +197,7 @@ export const transitions = {
   fast: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
   normal: '300ms cubic-bezier(0.4, 0, 0.2, 1)',
   slow: '500ms cubic-bezier(0.4, 0, 0.2, 1)',
-  
+
   // Spring animations
   spring: '500ms cubic-bezier(0.34, 1.56, 0.64, 1)',
 };

@@ -73,7 +73,7 @@ export async function subscribeToPush(userId: string): Promise<PushSubscription 
     if (!subscription) {
       // VAPID public key from environment
       const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-      
+
       if (!vapidPublicKey) {
         throw new Error('VAPID public key not configured');
       }
@@ -152,10 +152,7 @@ export async function sendPushNotification(
   });
 
   // In a real implementation, this would use the web-push library
-  // to send the notification to the subscription endpoint
-  console.log('Push notification payload:', payload);
-  console.log('Subscription:', subscription);
-}
+  // to send the notification to the subscription endpoint}
 
 /**
  * Save push subscription to server

@@ -43,10 +43,10 @@ export function formatPhoneNumber(phone: string): string {
  */
 export function validatePhoneNumber(phone: string): boolean {
   const formatted = formatPhoneNumber(phone);
-  
+
   // Ghana phone numbers should be +233 followed by 9 digits
   const ghanaRegex = /^\+233[0-9]{9}$/;
-  
+
   return ghanaRegex.test(formatted);
 }
 
@@ -67,7 +67,7 @@ export async function sendSMS(phoneNumber: string, message: string): Promise<voi
 
   // Ensure message is not too long (SMS limit is 160 characters for single SMS)
   const maxLength = 160;
-  const truncatedMessage = message.length > maxLength 
+  const truncatedMessage = message.length > maxLength
     ? `${message.substring(0, maxLength - 3)}...`
     : message;
 
@@ -93,14 +93,12 @@ export async function sendSMS(phoneNumber: string, message: string): Promise<voi
     }
 
     const result: any = await response.json();
-    
+
     if (result.SMSMessageData?.Recipients?.[0]?.status !== 'Success') {
       throw new Error(`SMS delivery failed: ${result.SMSMessageData?.Recipients?.[0]?.statusCode}`);
     }
 
-    // Log success (result is used in the condition above)
-    console.log(`SMS sent successfully to ${formattedPhone}`);
-  } catch (error) {
+    // Log success (result is used in the condition above)  } catch (error) {
     console.error('Failed to send SMS:', error);
     throw error;
   }
@@ -125,7 +123,7 @@ export async function sendBulkSMS(phoneNumbers: string[], message: string): Prom
 
   // Ensure message is not too long
   const maxLength = 160;
-  const truncatedMessage = message.length > maxLength 
+  const truncatedMessage = message.length > maxLength
     ? `${message.substring(0, maxLength - 3)}...`
     : message;
 
@@ -151,8 +149,6 @@ export async function sendBulkSMS(phoneNumbers: string[], message: string): Prom
     }
 
     await response.json(); // Result not needed
-    console.log(`Bulk SMS sent to ${formattedPhones.length} recipients`);
-    
     return;
   } catch (error) {
     console.error('Failed to send bulk SMS:', error);

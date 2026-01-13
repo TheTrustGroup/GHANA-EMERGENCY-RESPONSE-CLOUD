@@ -22,12 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Log for development
-    if (process.env.NODE_ENV === 'development') {
-      console.log('📊 Analytics:', event, {
-        properties,
-        userId: session?.user?.id || 'anonymous',
-      });
-    }
+    if (process.env.NODE_ENV === 'development') {    }
 
     // In production, you could store this in a database or send to analytics service
     // For now, we'll just return success

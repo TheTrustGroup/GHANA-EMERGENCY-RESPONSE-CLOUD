@@ -111,7 +111,7 @@ function getCurrentUserId(): string | null {
   // This would typically come from your auth system
   // For now, return null or get from localStorage/session
   if (typeof window === 'undefined') return null;
-  
+
   try {
     const session = sessionStorage.getItem('user');
     if (session) {
@@ -121,7 +121,7 @@ function getCurrentUserId(): string | null {
   } catch {
     // Ignore errors
   }
-  
+
   return null;
 }
 
@@ -132,12 +132,12 @@ function getSessionId(): string {
   if (typeof window === 'undefined') return '';
 
   let sessionId = sessionStorage.getItem('analytics_session_id');
-  
+
   if (!sessionId) {
     sessionId = crypto.randomUUID();
     sessionStorage.setItem('analytics_session_id', sessionId);
   }
-  
+
   return sessionId;
 }
 

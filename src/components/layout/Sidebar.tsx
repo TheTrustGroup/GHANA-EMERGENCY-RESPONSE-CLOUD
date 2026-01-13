@@ -181,7 +181,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   // Filter nav items based on user role
   // If role is not available yet, show all items temporarily
   let filteredNavItems: NavItem[] = [];
-  
+
   if (status === 'loading') {
     // Show loading state - will be handled in render
     filteredNavItems = [];
@@ -189,21 +189,14 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     filteredNavItems = navItems.filter((item) => item.roles.includes(userRole as UserRole));
   } else {
     // Fallback: if no role detected, show common items (Dashboard + Settings)
-    filteredNavItems = navItems.filter((item) => 
-      item.roles.includes(UserRole.SYSTEM_ADMIN) || 
+    filteredNavItems = navItems.filter((item) =>
+      item.roles.includes(UserRole.SYSTEM_ADMIN) ||
       item.roles.includes(UserRole.CITIZEN)
     );
   }
-  
+
   // Debug logging (remove in production)
-  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-    console.log('[Sidebar Debug]', {
-      status,
-      userRole,
-      filteredCount: filteredNavItems.length,
-      allItemsCount: navItems.length,
-    });
-  }
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {  }
 
   const handleLogout = async () => {
     await signOut({ callbackUrl: '/auth/signin' });

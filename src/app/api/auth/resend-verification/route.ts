@@ -59,9 +59,6 @@ export async function POST(request: Request) {
     // await sendVerificationEmail(user.email, verificationLink);
 
     // For now, log the token (remove in production)
-    console.log(`Verification token for ${user.email}: ${verificationToken}`);
-    console.log(`Verification link: ${process.env.NEXTAUTH_URL}/auth/verify-email?token=${verificationToken}`);
-
     return NextResponse.json({
       success: true,
       message: 'If an account exists, a verification email has been sent.',

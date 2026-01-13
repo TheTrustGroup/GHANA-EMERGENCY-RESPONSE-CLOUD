@@ -77,7 +77,7 @@ export default function ReportEmergency() {
   // Auto-save to localStorage every 5 seconds (client-side only)
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    
+
     const interval = setInterval(() => {
       saveToLocalStorage('emergency-report', formData);
     }, 5000);
@@ -103,7 +103,7 @@ export default function ReportEmergency() {
       });
 
       const { latitude, longitude } = position.coords;
-      
+
       // Reverse geocode to get address (simplified - would use actual geocoding service)
       const address = await reverseGeocode(latitude, longitude);
 
@@ -169,13 +169,13 @@ export default function ReportEmergency() {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('emergency-report');
       }
-      
+
       // Show success and redirect
       toast({
         title: 'Emergency reported',
         description: `Report #${data.id.slice(-6)} has been sent to emergency services`,
       });
-      
+
       router.push(`/report/success?id=${data.id}`);
     },
     onError: (error) => {
@@ -209,8 +209,8 @@ export default function ReportEmergency() {
       }
 
       // Determine severity based on category
-      const severity = formData.category === 'fire' || formData.category === 'medical' 
-        ? 'HIGH' 
+      const severity = formData.category === 'fire' || formData.category === 'medical'
+        ? 'HIGH'
         : 'MEDIUM';
 
       // Map lowercase category to uppercase enum
@@ -224,7 +224,7 @@ export default function ReportEmergency() {
       } else {
         category = IncidentCategory.OTHER;
       }
-      
+
       // Create incident
       const incidentData = {
         title: `${formData.category?.charAt(0).toUpperCase() + formData.category?.slice(1)} Emergency`,
@@ -238,7 +238,7 @@ export default function ReportEmergency() {
         district: 'Accra Metropolitan', // Would be determined from coordinates
         mediaUrls,
       };
-      
+
       await createIncident.mutateAsync(incidentData as any);
     } catch (error) {
       console.error('Submit error:', error);

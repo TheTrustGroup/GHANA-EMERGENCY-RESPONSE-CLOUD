@@ -46,7 +46,7 @@ export default function NotificationsPage() {
     const date = typeof notification.createdAt === 'string'
       ? new Date(notification.createdAt)
       : notification.createdAt;
-    
+
     let groupKey: string;
     if (isToday(date)) {
       groupKey = 'Today';

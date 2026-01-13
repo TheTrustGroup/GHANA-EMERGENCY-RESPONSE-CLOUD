@@ -114,7 +114,7 @@ export default function NotificationPreferencesPage() {
     try {
       // TODO: Save preferences to server
       // await trpc.settings.updateNotificationPreferences.mutate(preferences);
-      
+
       toast({
         title: 'Preferences saved',
         description: 'Your notification preferences have been updated.',

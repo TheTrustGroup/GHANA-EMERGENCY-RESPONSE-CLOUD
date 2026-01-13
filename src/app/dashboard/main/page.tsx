@@ -7,11 +7,11 @@
  */
 
 import { useMemo } from 'react';
-import { 
-  AlertTriangle, 
-  Clock, 
-  Activity, 
-  MapPin, 
+import {
+  AlertTriangle,
+  Clock,
+  Activity,
+  MapPin,
   TrendingUp,
   Users,
   Radio,
@@ -77,9 +77,9 @@ export default function PremiumDashboard() {
   // Sort incidents by severity and recency
   const sortedIncidents = useMemo(() => {
     if (!activeIncidents) return [];
-    
+
     const severityOrder = { CRITICAL: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
-    
+
     return [...activeIncidents].sort((a, b) => {
       const severityDiff = (severityOrder[b.severity] || 0) - (severityOrder[a.severity] || 0);
       if (severityDiff !== 0) return severityDiff;

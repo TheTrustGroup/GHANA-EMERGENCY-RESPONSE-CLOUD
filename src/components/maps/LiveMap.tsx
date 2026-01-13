@@ -110,7 +110,7 @@ export function LiveMap({ incidents = [], onIncidentClick, className }: LiveMapP
               <p class="font-bold text-sm">${incident.title}</p>
             </div>
             <p class="text-xs text-gray-600 mb-2">${incident.category}</p>
-            <button 
+            <button
               class="w-full px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 transition-colors"
               onclick="window.dispatchEvent(new CustomEvent('map-incident-click', { detail: '${incident.id}' }))"
             >
@@ -152,7 +152,7 @@ export function LiveMap({ incidents = [], onIncidentClick, className }: LiveMapP
               <p class="font-bold text-sm">${incident.title}</p>
             </div>
             <p class="text-xs text-gray-600 mb-2">${incident.category}</p>
-            <button 
+            <button
               class="w-full px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 transition-colors"
               onclick="window.dispatchEvent(new CustomEvent('map-incident-click', { detail: '${incident.id}' }))"
             >

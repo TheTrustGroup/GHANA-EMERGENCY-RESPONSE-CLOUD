@@ -126,7 +126,7 @@ const config: Config = {
         mono: ['var(--font-mono)', 'monospace'],
       },
       boxShadow: {
-        'glow': '0 0 20px rgba(59, 130, 246, 0.5)',
+        glow: '0 0 20px rgba(59, 130, 246, 0.5)',
         'glow-red': '0 0 20px rgba(239, 68, 68, 0.5)',
         'glow-green': '0 0 20px rgba(34, 197, 94, 0.5)',
       },
@@ -156,7 +156,7 @@ const config: Config = {
         },
       },
       padding: {
-        'safe': 'env(safe-area-inset-bottom)',
+        safe: 'env(safe-area-inset-bottom)',
       },
     },
   },

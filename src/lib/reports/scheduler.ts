@@ -21,7 +21,7 @@ export async function checkScheduledReports(): Promise<void> {
   // Find active report configurations
   // Note: This assumes a report_configs table exists. In production, create proper Prisma models.
   const activeReports = await prisma.$queryRaw`
-    SELECT * FROM report_configs 
+    SELECT * FROM report_configs
     WHERE is_active = true AND schedule_enabled = true
   ` as any[];
 
@@ -45,7 +45,7 @@ export async function checkScheduledReports(): Promise<void> {
 
       // Check existing execution (would use proper Prisma model in production)
       const existingExecution = await prisma.$queryRaw`
-        SELECT * FROM report_executions 
+        SELECT * FROM report_executions
         WHERE report_config_id = ${reportConfig.id}
         AND scheduled_at >= ${today}
         AND status IN ('completed', 'running')
@@ -140,9 +140,7 @@ async function sendReportNotifications(
   generatedReport: any
 ): Promise<void> {
   // This would integrate with the email service
-  // For now, just log
-  console.log(`Sending report ${generatedReport.id} to recipients of config ${reportConfig.id}`);
-}
+  // For now, just log}
 
 /**
  * Convert timezone-aware time to UTC

@@ -58,7 +58,7 @@ export function useLocationTracking({
       try {
         const result = await navigator.permissions.query({ name: 'geolocation' });
         setPermissionStatus(result.state);
-        
+
       } catch (e) {
         // Permissions API might not be fully supported
         console.warn('Permissions API not fully supported:', e);

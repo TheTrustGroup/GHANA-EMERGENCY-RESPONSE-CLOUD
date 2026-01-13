@@ -49,13 +49,9 @@ export const authOptions: NextAuthOptions = {
           let normalizedIdentifier: string;
           if (isEmail) {
             // For email, lowercase it
-            normalizedIdentifier = rawIdentifier.toLowerCase();
-            console.log(`[AUTH] Using email: ${normalizedIdentifier}`);
-          } else {
+            normalizedIdentifier = rawIdentifier.toLowerCase();          } else {
             // For phone, format it but preserve original for rate limiting
-            normalizedIdentifier = formatGhanaPhone(rawIdentifier);
-            console.log(`[AUTH] Normalized phone: ${rawIdentifier} -> ${normalizedIdentifier}`);
-          }
+            normalizedIdentifier = formatGhanaPhone(rawIdentifier);          }
 
           // Validate credentials
           const user = await validateCredentials(normalizedIdentifier, credentials.password);
@@ -64,9 +60,7 @@ export const authOptions: NextAuthOptions = {
             console.error(`[AUTH] Invalid credentials for: ${rawIdentifier}`);
             // Don't throw here - let it return null so NextAuth handles it
             return null;
-          }
-
-          console.log(`[AUTH] Successfully authenticated: ${user.email} (${user.role})`);
+          }`);
 
           // Clear rate limit on successful login
           clearRateLimit(rateLimitKey);
@@ -136,9 +130,7 @@ export const authOptions: NextAuthOptions = {
 
   events: {
     async signIn({ user, isNewUser }) {
-      if (isNewUser) {
-        console.log(`New user registered: ${user.email}`);
-        // You can add additional logic here for new user registration
+      if (isNewUser) {        // You can add additional logic here for new user registration
       }
     },
   },
@@ -227,10 +219,7 @@ export async function validateCredentials(
     const isEmail = identifier.includes('@');
 
     // For emails, lowercase. For phones, use as-is (already formatted)
-    const normalizedIdentifier = isEmail ? identifier.toLowerCase().trim() : identifier.trim();
-
-    console.log(
-      `[VALIDATE] Looking up user with identifier: ${normalizedIdentifier} (isEmail: ${isEmail}, original: ${identifier})`
+    const normalizedIdentifier = isEmail ? identifier.toLowerCase().trim() : identifier.trim();`
     );
 
     // Try to find user by email (case-insensitive) or phone
@@ -267,10 +256,7 @@ export async function validateCredentials(
         );
       }
       return null;
-    }
-
-    console.log(
-      `[VALIDATE] User found: ${user.email} (Active: ${user.isActive}, Role: ${user.role})`
+    }`
     );
 
     // Verify password
@@ -282,9 +268,6 @@ export async function validateCredentials(
       console.error(`[VALIDATE] Password hash exists: ${!!user.passwordHash}`);
       return null;
     }
-
-    console.log(`[VALIDATE] Password verified for: ${user.email}`);
-
     // Update last login
     await prisma.users
       .update({

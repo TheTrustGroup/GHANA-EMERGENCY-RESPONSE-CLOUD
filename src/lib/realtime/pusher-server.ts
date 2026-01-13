@@ -37,7 +37,7 @@ export async function broadcastNewIncident(incident: {
     title: incident.title,
     timestamp: new Date().toISOString(),
   });
-  
+
   // If CRITICAL, also broadcast to regional channel
   if (incident.severity === 'CRITICAL') {
     await pusherServer.trigger(
@@ -62,7 +62,7 @@ export async function broadcastIncidentUpdate(incidentId: string, update: {
       timestamp: new Date().toISOString(),
     }
   );
-  
+
   // Also broadcast to global feed
   await pusherServer.trigger(
     'incidents-global',
@@ -84,14 +84,14 @@ export async function broadcastDispatchAssignment(dispatch: {
     'dispatch-assigned',
     dispatch
   );
-  
+
   // Update incident channel
   await pusherServer.trigger(
     `incident-${dispatch.incidentId}`,
     'dispatch-created',
     dispatch
   );
-  
+
   // Update agency channel
   await pusherServer.trigger(
     `agency-${dispatch.agencyId}`,

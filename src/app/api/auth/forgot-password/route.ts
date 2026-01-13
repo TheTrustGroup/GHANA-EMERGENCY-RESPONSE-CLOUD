@@ -53,9 +53,6 @@ export async function POST(request: Request) {
     // await sendPasswordResetEmail(user.email, resetLink);
 
     // For now, log the token (remove in production)
-    console.log(`Password reset token for ${user.email}: ${resetToken}`);
-    console.log(`Reset link: ${process.env.NEXTAUTH_URL}/auth/reset-password?token=${resetToken}`);
-
     return NextResponse.json({
       success: true,
       message: 'If an account exists, a password reset link has been sent.',

@@ -164,7 +164,7 @@ export function getDistrictFromCoordinates(
   lon: number
 ): string {
   const region = getRegionFromCoordinates(lat, lon);
-  
+
   // Return a default district name based on region
   // In a real implementation, this would use a more detailed mapping
   if (region === 'Greater Accra') {
@@ -186,7 +186,7 @@ export function getDistrictFromCoordinates(
   } else if (region === 'Upper West') {
     return 'Wa Municipal';
   }
-  
+
   // Default fallback
   return 'Unknown District';
 }

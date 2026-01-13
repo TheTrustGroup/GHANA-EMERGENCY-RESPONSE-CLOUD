@@ -49,7 +49,7 @@ export function RootLayout({ children }: RootLayoutProps) {
   return (
     <div className="relative flex h-screen overflow-hidden">
       {/* Subtle Background Pattern */}
-      <div 
+      <div
         className="fixed inset-0 z-0"
         style={{
           backgroundImage: "url('/images/backgrounds/dashboard-bg.jpg')",
@@ -59,10 +59,10 @@ export function RootLayout({ children }: RootLayoutProps) {
           opacity: 0.03, // Very subtle
         }}
       />
-      
+
       {/* Optional: Gradient overlay for better contrast */}
       <div className="fixed inset-0 z-0 bg-gradient-to-br from-slate-50 via-white to-blue-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950/30" />
-      
+
       {/* Main Layout */}
       <div className="relative z-10 flex h-screen overflow-hidden">
         {/* Sidebar - Desktop only */}

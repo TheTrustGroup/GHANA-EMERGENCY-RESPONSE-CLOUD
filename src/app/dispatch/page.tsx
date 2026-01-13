@@ -60,10 +60,8 @@ export default function DispatchCenter() {
   );
 
   // Real-time updates
-  useIncidentUpdates(useCallback((data: any) => {
-    console.log('New incident or update:', data);
-    refetch();
-    
+  useIncidentUpdates(useCallback((data: any) => {    refetch();
+
     if (data.severity === 'CRITICAL') {
       toast.error(`CRITICAL INCIDENT: ${data.title}`, {
         duration: 10000,

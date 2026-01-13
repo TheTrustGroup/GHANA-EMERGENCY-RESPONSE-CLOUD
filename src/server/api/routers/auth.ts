@@ -106,8 +106,6 @@ export const authRouter = createTRPCRouter({
       // TODO: Store token in database
 
       // TODO: Send email
-      console.log(`Reset token for ${user.email}: ${resetToken}`);
-
       return { success: true, message: 'If an account exists, a reset link has been sent' };
     }),
 

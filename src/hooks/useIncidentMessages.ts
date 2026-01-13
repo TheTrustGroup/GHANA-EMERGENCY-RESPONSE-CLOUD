@@ -149,7 +149,7 @@ export function useIncidentMessages({
       const unreadIds = messages
         .filter((m) => !m.isSystemMessage)
         .map((m) => m.id);
-      
+
       if (unreadIds.length > 0) {
         markAsReadMutation.mutate({ messageIds: unreadIds });
       }

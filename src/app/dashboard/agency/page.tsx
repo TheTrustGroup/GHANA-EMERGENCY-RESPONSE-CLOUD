@@ -5,13 +5,13 @@ import { trpc } from '@/lib/trpc/client';
 import { Button } from '@/components/ui/premium/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/premium/Card';
 import { Badge } from '@/components/ui/premium/Badge';
-import { 
-  Users, 
-  TrendingUp, 
+import {
+  Users,
+  TrendingUp,
   TrendingDown,
-  Clock, 
-  CheckCircle2, 
-  AlertCircle, 
+  Clock,
+  CheckCircle2,
+  AlertCircle,
   BarChart3,
   Download,
   UserPlus,
@@ -19,15 +19,15 @@ import {
   Target,
   Shield
 } from 'lucide-react';
-import { 
-  AreaChart, 
-  Area, 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
 } from 'recharts';
 import { motion } from 'framer-motion';
@@ -37,25 +37,25 @@ import { ClientOnly } from '@/components/ui/ClientOnly';
 export default function AgencyAdminDashboard() {
   const { data: session } = useSession();
   const agencyId = session?.user?.agencyId;
-  
+
   const { data: stats } = trpc.agencies.getAgencyStats.useQuery(
     { agencyId: agencyId || '' },
     { enabled: !!agencyId }
   );
-  
+
   const { data: team } = trpc.users.getByAgency.useQuery(
     { agencyId: agencyId || '' },
     { enabled: !!agencyId }
   );
-  
-  const { data: incidents } = trpc.incidents.getAll.useQuery({ 
+
+  const { data: incidents } = trpc.incidents.getAll.useQuery({
     page: 1,
     pageSize: 50,
   });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
-      
+
       {/* TOP HEADER - Professional */}
       <div className="sticky top-0 z-40 border-b bg-white shadow-sm">
         <div className="mx-auto max-w-7xl px-6 py-4">
@@ -98,7 +98,7 @@ export default function AgencyAdminDashboard() {
 
       {/* MAIN CONTENT */}
       <div className="mx-auto max-w-7xl px-6 py-8">
-        
+
         {/* KEY METRICS GRID */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -145,7 +145,7 @@ export default function AgencyAdminDashboard() {
 
         {/* PERFORMANCE SCORE + TEAM STATUS */}
         <div className="mb-8 grid gap-6 lg:grid-cols-3">
-          
+
           {/* TEAM STATUS - 2 columns */}
           <Card variant="elevated" className="lg:col-span-2">
             <CardHeader className="border-b bg-gradient-to-r from-blue-50 to-transparent">
@@ -227,7 +227,7 @@ export default function AgencyAdminDashboard() {
                   <div className="text-sm font-semibold text-gray-600">out of 100</div>
                 </div>
               </motion.div>
-              
+
               <Badge className="mb-6 border-0 bg-green-100 text-green-800">
                 <TrendingUp className="mr-1 h-3 w-3" />
                 +5 from last week
@@ -244,7 +244,7 @@ export default function AgencyAdminDashboard() {
 
         {/* ANALYTICS CHARTS */}
         <div className="mb-8 grid gap-6 lg:grid-cols-2">
-          
+
           {/* RESPONSE TRENDS */}
           <Card variant="elevated">
             <CardHeader className="border-b">
@@ -263,16 +263,16 @@ export default function AgencyAdminDashboard() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis 
-                    dataKey="day" 
+                  <XAxis
+                    dataKey="day"
                     stroke="#6b7280"
                     style={{ fontSize: '12px' }}
                   />
-                  <YAxis 
+                  <YAxis
                     stroke="#6b7280"
                     style={{ fontSize: '12px' }}
                   />
-                  <Tooltip 
+                  <Tooltip
                     contentStyle={{
                       backgroundColor: 'white',
                       border: '1px solid #e5e7eb',
@@ -280,11 +280,11 @@ export default function AgencyAdminDashboard() {
                       boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
                     }}
                   />
-                  <Area 
-                    type="monotone" 
-                    dataKey="incidents" 
-                    stroke="#3b82f6" 
-                    fill="url(#colorIncidents)" 
+                  <Area
+                    type="monotone"
+                    dataKey="incidents"
+                    stroke="#3b82f6"
+                    fill="url(#colorIncidents)"
                     strokeWidth={3}
                   />
                 </AreaChart>
@@ -304,16 +304,16 @@ export default function AgencyAdminDashboard() {
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={stats?.categoryData || []}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis 
-                    dataKey="category" 
+                  <XAxis
+                    dataKey="category"
                     stroke="#6b7280"
                     style={{ fontSize: '12px' }}
                   />
-                  <YAxis 
+                  <YAxis
                     stroke="#6b7280"
                     style={{ fontSize: '12px' }}
                   />
-                  <Tooltip 
+                  <Tooltip
                     contentStyle={{
                       backgroundColor: 'white',
                       border: '1px solid #e5e7eb',
@@ -321,10 +321,10 @@ export default function AgencyAdminDashboard() {
                       boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
                     }}
                   />
-                  <Bar 
-                    dataKey="count" 
-                    fill="url(#barGradient)" 
-                    radius={[12, 12, 0, 0]} 
+                  <Bar
+                    dataKey="count"
+                    fill="url(#barGradient)"
+                    radius={[12, 12, 0, 0]}
                   />
                   <defs>
                     <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
@@ -369,7 +369,7 @@ export default function AgencyAdminDashboard() {
                   }`} />
                   <div className="flex-1">
                     <div className="mb-2 flex items-center gap-2">
-                      <Badge 
+                      <Badge
                         variant={incident.severity === 'CRITICAL' ? 'critical' : 'high'}
                         size="sm"
                       >
@@ -389,7 +389,7 @@ export default function AgencyAdminDashboard() {
                       {incident.region}, {incident.district}
                     </p>
                   </div>
-                  <Badge 
+                  <Badge
                     variant={incident.status === 'RESOLVED' ? 'success' : 'default'}
                     size="sm"
                   >
@@ -407,27 +407,27 @@ export default function AgencyAdminDashboard() {
 
 function MetricCard({ icon: Icon, label, value, change, trending, color, description }: any) {
   const colors: Record<string, any> = {
-    red: { 
-      bg: 'from-red-500 to-red-600', 
-      light: 'bg-red-100', 
+    red: {
+      bg: 'from-red-500 to-red-600',
+      light: 'bg-red-100',
       text: 'text-red-600',
       border: 'border-l-red-600'
     },
-    blue: { 
-      bg: 'from-blue-500 to-blue-600', 
-      light: 'bg-blue-100', 
+    blue: {
+      bg: 'from-blue-500 to-blue-600',
+      light: 'bg-blue-100',
       text: 'text-blue-600',
       border: 'border-l-blue-600'
     },
-    green: { 
-      bg: 'from-green-500 to-green-600', 
-      light: 'bg-green-100', 
+    green: {
+      bg: 'from-green-500 to-green-600',
+      light: 'bg-green-100',
       text: 'text-green-600',
       border: 'border-l-green-600'
     },
-    purple: { 
-      bg: 'from-purple-500 to-purple-600', 
-      light: 'bg-purple-100', 
+    purple: {
+      bg: 'from-purple-500 to-purple-600',
+      light: 'bg-purple-100',
       text: 'text-purple-600',
       border: 'border-l-purple-600'
     },
@@ -445,7 +445,7 @@ function MetricCard({ icon: Icon, label, value, change, trending, color, descrip
           {change !== null && (
             <div className={`flex items-center gap-1 text-sm font-semibold ${
               (trending === 'up' && change > 0) || (trending === 'down' && change < 0)
-                ? 'text-green-600' 
+                ? 'text-green-600'
                 : 'text-red-600'
             }`}>
               {(trending === 'up' && change > 0) || (trending === 'down' && change < 0) ? (

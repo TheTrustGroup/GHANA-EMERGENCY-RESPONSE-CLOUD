@@ -11,11 +11,11 @@ import { formatDistanceToNow, format } from 'date-fns';
  */
 export function formatDateSafe(date: Date | string | null | undefined): string {
   if (!date) return 'N/A';
-  
+
   try {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     if (isNaN(dateObj.getTime())) return 'Invalid Date';
-    
+
     // Use ISO string for consistency between server and client
     return dateObj.toISOString();
   } catch {
@@ -29,16 +29,16 @@ export function formatDateSafe(date: Date | string | null | undefined): string {
  */
 export function formatRelativeTime(date: Date | string | null | undefined): string {
   if (!date) return 'N/A';
-  
+
   try {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     if (isNaN(dateObj.getTime())) return 'Invalid Date';
-    
+
     // Check if we're on the client
     if (typeof window === 'undefined') {
       return formatDateSafe(dateObj);
     }
-    
+
     return formatDistanceToNow(dateObj, { addSuffix: true });
   } catch {
     return 'Invalid Date';
@@ -50,11 +50,11 @@ export function formatRelativeTime(date: Date | string | null | undefined): stri
  */
 export function formatTime(date: Date | string | null | undefined): string {
   if (!date) return 'N/A';
-  
+
   try {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     if (isNaN(dateObj.getTime())) return 'Invalid Date';
-    
+
     // Use consistent format
     return format(dateObj, 'HH:mm');
   } catch {
@@ -67,11 +67,11 @@ export function formatTime(date: Date | string | null | undefined): string {
  */
 export function formatDateTime(date: Date | string | null | undefined): string {
   if (!date) return 'N/A';
-  
+
   try {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     if (isNaN(dateObj.getTime())) return 'Invalid Date';
-    
+
     return format(dateObj, 'PPp');
   } catch {
     return 'Invalid Date';

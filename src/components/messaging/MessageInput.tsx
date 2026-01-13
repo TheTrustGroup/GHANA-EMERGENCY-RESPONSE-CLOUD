@@ -51,7 +51,7 @@ export function MessageInput({
     setContent('');
     setMediaFiles([]);
     setMediaPreviews([]);
-    
+
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
@@ -97,11 +97,11 @@ export function MessageInput({
   const removeMedia = (index: number) => {
     const newFiles = [...mediaFiles];
     const newPreviews = [...mediaPreviews];
-    
+
     URL.revokeObjectURL(newPreviews[index]);
     newFiles.splice(index, 1);
     newPreviews.splice(index, 1);
-    
+
     setMediaFiles(newFiles);
     setMediaPreviews(newPreviews);
   };

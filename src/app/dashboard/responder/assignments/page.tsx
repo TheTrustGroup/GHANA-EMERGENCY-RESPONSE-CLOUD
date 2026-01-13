@@ -69,7 +69,7 @@ export default function ResponderAssignmentsPage() {
       setSelectedDispatchId(latestPending.id);
       setSelectedIncidentId(latestPending.incidentId);
       setAcceptDialogOpen(true);
-      
+
       // Show notification
       toast({
         title: 'New Assignment',

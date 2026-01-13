@@ -1,12 +1,12 @@
 /**
  * Type Definitions for Ghana Emergency Response Platform
- * 
+ *
  * This module serves as the single source of truth for all type definitions
  * used throughout the application. It includes:
  * - Enums for user roles, incident severity, status, and agency types
  * - Core data models for all entities in the system
  * - Zod schemas for runtime validation
- * 
+ *
  * All types are exported from this module to ensure consistency across the codebase.
  */
 
