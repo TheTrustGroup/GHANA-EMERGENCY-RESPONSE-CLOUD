@@ -686,6 +686,7 @@ export const incidentsRouter = createTRPCRouter({
 
       const update = await ctx.prisma.incident_updates.create({
         data: {
+          id: `update-${Date.now()}-${Math.random().toString(36).substring(7)}`,
           incidentId: input.incidentId,
           userId: ctx.session.user.id,
           updateType: updateTypeMap[input.updateType],
