@@ -29,7 +29,6 @@ import {
   HelpCircle,
   LogOut
 } from 'lucide-react';
-import { toast } from 'sonner';
 import { haptics } from '@/lib/haptics';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 
