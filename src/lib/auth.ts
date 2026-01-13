@@ -261,7 +261,10 @@ export async function validateCredentials(
         );
       }
       return null;
-    }`
+    }
+
+    console.log(
+      `[VALIDATE] User found: ${user.email} (Active: ${user.isActive}, Role: ${user.role})`
     );
 
     // Verify password
