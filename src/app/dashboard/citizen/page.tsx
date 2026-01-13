@@ -52,7 +52,7 @@ export default function CitizenDashboardApp() {
   );
 
   // Pull to refresh
-  const { pulling, refreshing } = usePullToRefresh(async () => {
+  usePullToRefresh(async () => {
     await refetch();
     haptics.success();
   });
