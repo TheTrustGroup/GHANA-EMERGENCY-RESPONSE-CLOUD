@@ -5,7 +5,7 @@
  * Step-by-step report configuration
  */
 
-import { Suspense, useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import { RootLayout } from '@/components/layout';
