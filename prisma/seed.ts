@@ -33,13 +33,13 @@ async function main(): Promise<void> {
   // Clear existing data (in reverse order of dependencies)
   console.log('🧹 Cleaning existing data...');
   await prisma.notifications.deleteMany();
-  await prisma.auditLog.deleteMany();
-  await prisma.incidentUpdate.deleteMany();
-  await prisma.message.deleteMany();
-  await prisma.dispatchAssignment.deleteMany();
-  await prisma.incident.deleteMany();
-  await prisma.user.deleteMany();
-  await prisma.agency.deleteMany();
+  await prisma.audit_logs.deleteMany();
+  await prisma.incident_updates.deleteMany();
+  await prisma.messages.deleteMany();
+  await prisma.dispatch_assignments.deleteMany();
+  await prisma.incidents.deleteMany();
+  await prisma.users.deleteMany();
+  await prisma.agencies.deleteMany();
 
   // Create Agencies
   console.log('🏢 Creating agencies...');
