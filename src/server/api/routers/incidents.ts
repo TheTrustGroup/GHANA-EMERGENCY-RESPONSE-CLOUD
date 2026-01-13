@@ -554,7 +554,7 @@ export const incidentsRouter = createTRPCRouter({
             createdAt: true,
             district: true,
             region: true,
-            assignedAgency: {
+            agencies: {
               select: { id: true, name: true },
             },
           },
