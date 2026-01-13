@@ -266,7 +266,7 @@ export const messagesRouter = createTRPCRouter({
               email: true,
             },
           },
-          assignedAgency: {
+          agencies: {
             include: {
               users: {
                 select: {
