@@ -38,6 +38,7 @@ export async function handleNewIncident(incidentData: {
   // 2. Save to database
   const incident = await prisma.incidents.create({
     data: {
+      id: `incident-${Date.now()}-${Math.random().toString(36).substring(7)}`,
       category: incidentData.category as any,
       severity: incidentData.severity as any,
       title: incidentData.title,
@@ -52,6 +53,7 @@ export async function handleNewIncident(incidentData: {
       reporterPhone: incidentData.reporterPhone || null,
       reporterName: incidentData.reporterName || null,
       status: 'REPORTED',
+      updatedAt: new Date(),
     },
   });
 
@@ -103,6 +105,7 @@ export async function handleNewIncident(incidentData: {
   if (incidentData.reportedById) {
     await prisma.audit_logs.create({
       data: {
+        id: `audit-${Date.now()}-${Math.random().toString(36).substring(7)}`,
         userId: incidentData.reportedById,
         action: 'INCIDENT_CREATED',
         entity: 'Incident',
@@ -150,6 +153,7 @@ export async function handleDispatchAssignment(assignmentData: {
   // 3. Create assignment
   const assignment = await prisma.dispatch_assignments.create({
     data: {
+      id: `dispatch-${Date.now()}-${Math.random().toString(36).substring(7)}`,
       incidentId: assignmentData.incidentId,
       agencyId: assignmentData.agencyId,
       responderId: assignmentData.responderId!,
@@ -158,9 +162,9 @@ export async function handleDispatchAssignment(assignmentData: {
       status: 'DISPATCHED',
     },
     include: {
-      incident: true,
-      agency: true,
-      responder: true,
+      incidents: true,
+      agencies: true,
+      users: true,
     },
   });
 
@@ -175,8 +179,8 @@ export async function handleDispatchAssignment(assignmentData: {
   });
 
   // 5. Notify responder (push + SMS)
-  if (assignment.responder) {
-    await createNotification(assignment.responder.id, {
+  if (assignment.users) {
+    await createNotification(assignment.users.id, {
       type: NotificationType.DISPATCH_ASSIGNMENT,
       title: 'New Assignment',
       message: `You have been assigned to: ${assignment.incident.title}`,
@@ -301,11 +305,12 @@ export async function handleStatusUpdate(updateData: {
   }
 
   // 4. Create incident update
-  await prisma.incidentsUpdate.create({
+  await prisma.incident_updates.create({
     data: {
+      id: `update-${Date.now()}-${Math.random().toString(36).substring(7)}`,
       incidentId: assignment.incidentId,
       userId: updateData.userId,
-      updateType: 'STATUS_CHANGE',
+      updateType: 'RESPONDER_UPDATE',
       content: `Responder status: ${updateData.status}`,
     },
   });

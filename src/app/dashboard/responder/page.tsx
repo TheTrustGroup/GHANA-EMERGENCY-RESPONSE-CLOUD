@@ -39,7 +39,8 @@ export default function ResponderFieldOps() {
   useDispatchUpdates(session?.user?.id || '', (data: any) => {
     // Maximum alert
     toast.error('🚨 NEW DISPATCH ASSIGNMENT!', {
-      description: data.incidents?.title || data.incident?.title || 'An emergency requires your attention.',
+      description:
+        data.incidents?.title || data.incident?.title || 'An emergency requires your attention.',
       duration: 30000,
       className: 'bg-red-600 text-white text-lg font-bold',
     });

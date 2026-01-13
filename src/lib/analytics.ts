@@ -54,11 +54,11 @@ export function calculateResponseTime(incident: {
  */
 export function calculateResolutionRate(incidents: Prisma.incidentsGetPayload<{}>[]): number {
   if (incidents.length === 0) return 0;
-  
+
   const resolved = incidents.filter(
     (inc) => inc.status === IncidentStatus.RESOLVED || inc.status === IncidentStatus.CLOSED
   ).length;
-  
+
   return Math.round((resolved / incidents.length) * 100 * 100) / 100; // 2 decimal places
 }
 
@@ -66,46 +66,47 @@ export function calculateResolutionRate(incidents: Prisma.incidentsGetPayload<{}
  * Calculate agency performance score
  * Weighted score based on multiple factors
  */
-export function calculateAgencyScore(
-  agency: {
-    id: string;
-    name: string;
-    incidents: Prisma.incidentsGetPayload<{}>[];
-    avgResponseTime: number;
-  }
-): AgencyScore {
+export function calculateAgencyScore(agency: {
+  id: string;
+  name: string;
+  incidents: Prisma.incidentsGetPayload<{}>[];
+  avgResponseTime: number;
+}): AgencyScore {
   const incidents = agency.incidents;
   const resolvedIncidents = incidents.filter(
     (inc) => inc.status === IncidentStatus.RESOLVED || inc.status === IncidentStatus.CLOSED
   );
 
   const resolutionRate = calculateResolutionRate(incidents);
-  
+
   // Response time score (inverse - lower is better, max 100)
-  const responseTimeScore = Math.max(0, 100 - (agency.avgResponseTime / 10));
-  
+  const responseTimeScore = Math.max(0, 100 - agency.avgResponseTime / 10);
+
   // Resolution rate score (direct - higher is better)
   const resolutionRateScore = resolutionRate;
-  
+
   // Volume score (normalized, max 100)
   const maxVolume = 1000; // Assume max 1000 incidents
   const volumeScore = Math.min(100, (incidents.length / maxVolume) * 100);
-  
+
   // Consistency score (based on standard deviation of response times)
   const responseTimes = resolvedIncidents
     .map((inc) => calculateResponseTime(inc))
     .filter((time): time is number => time !== null);
-  
-  const avgResponseTime = responseTimes.length > 0
-    ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length
-    : 0;
-  
-  const variance = responseTimes.length > 0
-    ? responseTimes.reduce((sum, time) => sum + Math.pow(time - avgResponseTime, 2), 0) / responseTimes.length
-    : 0;
-  
+
+  const avgResponseTime =
+    responseTimes.length > 0
+      ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length
+      : 0;
+
+  const variance =
+    responseTimes.length > 0
+      ? responseTimes.reduce((sum, time) => sum + Math.pow(time - avgResponseTime, 2), 0) /
+        responseTimes.length
+      : 0;
+
   const stdDev = Math.sqrt(variance);
-  const consistencyScore = Math.max(0, 100 - (stdDev / 5)); // Lower std dev = higher score
+  const consistencyScore = Math.max(0, 100 - stdDev / 5); // Lower std dev = higher score
 
   // Weighted final score
   const weights = {
@@ -141,16 +142,14 @@ export function calculateAgencyScore(
  * Calculate responder utilization rate
  * Percentage of time spent on assignments vs. available
  */
-export function calculateUtilizationRate(
-  responder: {
-    assignments: Array<{
-      dispatchedAt: Date;
-      completedAt?: Date | null;
-      status: string;
-    }>;
-    totalHours: number; // Total hours in period
-  }
-): number {
+export function calculateUtilizationRate(responder: {
+  assignments: Array<{
+    dispatchedAt: Date;
+    completedAt?: Date | null;
+    status: string;
+  }>;
+  totalHours: number; // Total hours in period
+}): number {
   if (responder.totalHours === 0) return 0;
 
   const activeHours = responder.assignments.reduce((total, assignment) => {
@@ -341,4 +340,3 @@ export function calculatePercentageChange(current: number, previous: number): nu
   if (previous === 0) return current > 0 ? 100 : 0;
   return Math.round(((current - previous) / previous) * 100 * 100) / 100;
 }
-

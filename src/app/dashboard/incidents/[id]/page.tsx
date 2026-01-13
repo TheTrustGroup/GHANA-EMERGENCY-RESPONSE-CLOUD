@@ -10,14 +10,7 @@ import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { format } from 'date-fns';
 import Image from 'next/image';
-import {
-  MapPin,
-  Calendar,
-  User,
-  Phone,
-  MessageSquare,
-  Clock,
-} from 'lucide-react';
+import { MapPin, Calendar, User, Phone, MessageSquare, Clock } from 'lucide-react';
 import { RootLayout } from '@/components/layout';
 import { DashboardShell } from '@/components/layout';
 import { Button } from '@/components/ui/button';
@@ -59,7 +52,11 @@ export default function IncidentDetailPage() {
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
 
-  const { data: incident, isLoading, refetch } = trpc.incidents.getById.useQuery(
+  const {
+    data: incident,
+    isLoading,
+    refetch,
+  } = trpc.incidents.getById.useQuery(
     { id: incidentId },
     {
       refetchInterval: 30000, // Refetch every 30 seconds for real-time updates
@@ -101,8 +98,10 @@ export default function IncidentDetailPage() {
   }
 
   const userRole = session?.user?.role || 'CITIZEN';
-  const canEdit = userRole === 'SYSTEM_ADMIN' || userRole === 'AGENCY_ADMIN' || userRole === 'DISPATCHER';
-  const canAssign = userRole === 'DISPATCHER' || userRole === 'AGENCY_ADMIN' || userRole === 'SYSTEM_ADMIN';
+  const canEdit =
+    userRole === 'SYSTEM_ADMIN' || userRole === 'AGENCY_ADMIN' || userRole === 'DISPATCHER';
+  const canAssign =
+    userRole === 'DISPATCHER' || userRole === 'AGENCY_ADMIN' || userRole === 'SYSTEM_ADMIN';
 
   // Build timeline events
   const timelineEvents = [
@@ -110,20 +109,29 @@ export default function IncidentDetailPage() {
       id: 'created',
       type: 'created' as const,
       description: 'Incident reported',
-      user: (incident as any).reportedBy ? {
-        name: (incident as any).reportedBy.name,
-        role: 'CITIZEN',
-      } : undefined,
+      user: (incident as any).reportedBy
+        ? {
+            name: (incident as any).reportedBy.name,
+            role: 'CITIZEN',
+          }
+        : undefined,
       timestamp: incident.createdAt,
     },
     ...(updates || []).map((update: any) => ({
       id: update.id,
-      type: (update.updateType === 'NOTE_ADDED' ? 'update' : update.updateType === 'RESPONDER_UPDATE' ? 'responder_assigned' : 'update'),
+      type:
+        update.updateType === 'NOTE_ADDED'
+          ? 'update'
+          : update.updateType === 'RESPONDER_UPDATE'
+            ? 'responder_assigned'
+            : 'update',
       description: update.content,
-      user: (update as any).user ? {
-        name: (update as any).user.name || 'System',
-        role: (update as any).user.role || 'SYSTEM_ADMIN',
-      } : undefined,
+      user: (update as any).user
+        ? {
+            name: (update as any).user.name || 'System',
+            role: (update as any).user.role || 'SYSTEM_ADMIN',
+          }
+        : undefined,
       timestamp: update.createdAt,
       metadata: update.metadata as Record<string, any> | undefined,
     })),
@@ -137,16 +145,14 @@ export default function IncidentDetailPage() {
   ].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
   // Get nearby agencies for map
-  const nearbyAgencies = (incident as any).assignedAgency
-    ? [(incident as any).assignedAgency]
-    : [];
+  const nearbyAgencies = (incident as any).assignedAgency ? [(incident as any).assignedAgency] : [];
 
   return (
     <RootLayout>
       <DashboardShell title={`Incident: ${incident.title}`}>
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="space-y-6 lg:col-span-2">
             {/* Header */}
             <Card>
               <CardHeader>
@@ -212,7 +218,9 @@ export default function IncidentDetailPage() {
                     <span>{incident.district}</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>Coordinates: {incident.latitude.toFixed(6)}, {incident.longitude.toFixed(6)}</span>
+                    <span>
+                      Coordinates: {incident.latitude.toFixed(6)}, {incident.longitude.toFixed(6)}
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -289,11 +297,7 @@ export default function IncidentDetailPage() {
                   >
                     Add Update
                   </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start"
-                    asChild
-                  >
+                  <Button variant="outline" className="w-full justify-start" asChild>
                     <Link href={`/dashboard/incidents/${incidentId}/messages`}>
                       <MessageSquare className="mr-2 h-4 w-4" />
                       View Messages
@@ -309,11 +313,7 @@ export default function IncidentDetailPage() {
                 <CardTitle>Communication</CardTitle>
               </CardHeader>
               <CardContent>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  asChild
-                >
+                <Button variant="outline" className="w-full justify-start" asChild>
                   <Link href={`/dashboard/incidents/${incidentId}/messages`}>
                     <MessageSquare className="mr-2 h-4 w-4" />
                     Open Messages
@@ -408,28 +408,31 @@ export default function IncidentDetailPage() {
             )}
 
             {/* Dispatch Assignments */}
-            {(incident as any).dispatchAssignments && (incident as any).dispatchAssignments.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Responders</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {((incident as any).dispatchAssignments || []).map((dispatch: any) => (
-                    <div key={dispatch.id} className="rounded border p-3">
-                      <div className="font-medium">
-                        {dispatch.responder?.name || 'Unassigned'}
+            {(incident as any).dispatchAssignments &&
+              (incident as any).dispatchAssignments.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Responders</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {((incident as any).dispatchAssignments || []).map((dispatch: any) => (
+                      <div key={dispatch.id} className="rounded border p-3">
+                        <div className="font-medium">
+                          {dispatch.responder?.name || 'Unassigned'}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Status: {dispatch.status}
+                        </div>
+                        {dispatch.dispatchNotes && (
+                          <div className="mt-2 text-xs text-muted-foreground">
+                            {dispatch.dispatchNotes}
+                          </div>
+                        )}
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        Status: {dispatch.status}
-                      </div>
-                      {dispatch.dispatchNotes && (
-                        <div className="mt-2 text-xs text-muted-foreground">{dispatch.dispatchNotes}</div>
-                      )}
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
           </div>
         </div>
 
@@ -460,4 +463,3 @@ export default function IncidentDetailPage() {
     </RootLayout>
   );
 }
-

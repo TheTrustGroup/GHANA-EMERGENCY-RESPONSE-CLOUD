@@ -5,7 +5,12 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, protectedProcedure, dispatcherProcedure, publicProcedure } from '@/server/api/trpc';
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  dispatcherProcedure,
+  publicProcedure,
+} from '@/server/api/trpc';
 import {
   createIncidentSchema,
   updateIncidentSchema,
@@ -14,34 +19,45 @@ import {
 } from '@/lib/validations/incident';
 import { IncidentStatus, IncidentSeverity } from '@prisma/client';
 import { canAccessIncident, canEditIncident } from '@/lib/auth-utils';
-import { calculateDistance, getRegionFromCoordinates, getDistrictFromCoordinates } from '@/server/db/utils';
 import {
-  sendToAgency,
-  NotificationType,
-} from '@/lib/notifications/notification-service';
+  calculateDistance,
+  getRegionFromCoordinates,
+  getDistrictFromCoordinates,
+} from '@/server/db/utils';
+import { sendToAgency, NotificationType } from '@/lib/notifications/notification-service';
 import { broadcastNewIncident, broadcastIncidentUpdate } from '@/lib/realtime/pusher-server';
 import { cachedQuery, invalidateQueryCache, invalidateCache } from '@/lib/cache/trpc-cache';
 
 export const incidentsRouter = createTRPCRouter({
   // Public create for anonymous reporting
   createPublic: publicProcedure
-    .input(z.object({
-      category: z.enum(['FIRE', 'MEDICAL', 'ACCIDENT', 'NATURAL_DISASTER', 'CRIME', 'INFRASTRUCTURE', 'OTHER']),
-      severity: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']),
-      title: z.string().min(5).max(200),
-      description: z.string().max(2000).optional(),
-      latitude: z.number().min(-90).max(90),
-      longitude: z.number().min(-180).max(180),
-      address: z.string().optional(),
-      mediaUrls: z.array(z.string()).max(5).optional(),
-      reporterPhone: z.string().optional(),
-      reporterName: z.string().optional(),
-    }))
+    .input(
+      z.object({
+        category: z.enum([
+          'FIRE',
+          'MEDICAL',
+          'ACCIDENT',
+          'NATURAL_DISASTER',
+          'CRIME',
+          'INFRASTRUCTURE',
+          'OTHER',
+        ]),
+        severity: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']),
+        title: z.string().min(5).max(200),
+        description: z.string().max(2000).optional(),
+        latitude: z.number().min(-90).max(90),
+        longitude: z.number().min(-180).max(180),
+        address: z.string().optional(),
+        mediaUrls: z.array(z.string()).max(5).optional(),
+        reporterPhone: z.string().optional(),
+        reporterName: z.string().optional(),
+      })
+    )
     .mutation(async ({ input, ctx }) => {
       // Determine region from coordinates (simplified)
       const region = getRegionFromCoordinates(input.latitude, input.longitude) || 'Unknown Region';
       const district = getDistrictFromCoordinates(input.latitude, input.longitude);
-      
+
       // Create incident
       const incident = await ctx.prisma.incidents.create({
         data: {
@@ -52,7 +68,7 @@ export const incidentsRouter = createTRPCRouter({
           status: 'REPORTED',
         },
       });
-      
+
       // Broadcast to all dispatchers in real-time
       try {
         await broadcastNewIncident({
@@ -67,7 +83,7 @@ export const incidentsRouter = createTRPCRouter({
       } catch (error) {
         console.error('Pusher notification error:', error);
       }
-      
+
       // Create audit log if user is logged in
       if (ctx.session?.user) {
         await ctx.prisma.audit_logs.create({
@@ -79,154 +95,150 @@ export const incidentsRouter = createTRPCRouter({
           },
         });
       }
-      
+
       return incident;
     }),
 
-  create: protectedProcedure
-    .input(createIncidentSchema)
-    .mutation(async ({ input, ctx }) => {
-      // Calculate region and district from coordinates
-      const region = getRegionFromCoordinates(input.latitude, input.longitude) || 'Unknown Region';
-      const district = getDistrictFromCoordinates(input.latitude, input.longitude);
-      
-      // Remove region and district from input (we calculate them)
-      const { region: _, district: __, ...incidentData } = input;
-      
-      const incident = await ctx.prisma.incidents.create({
-        data: {
-          ...incidentData,
-          region,
-          district,
-          reportedById: ctx.session.user.id,
-          status: IncidentStatus.REPORTED,
+  create: protectedProcedure.input(createIncidentSchema).mutation(async ({ input, ctx }) => {
+    // Calculate region and district from coordinates
+    const region = getRegionFromCoordinates(input.latitude, input.longitude) || 'Unknown Region';
+    const district = getDistrictFromCoordinates(input.latitude, input.longitude);
+
+    // Remove region and district from input (we calculate them)
+    const { region: _, district: __, ...incidentData } = input;
+
+    const incident = await ctx.prisma.incidents.create({
+      data: {
+        ...incidentData,
+        region,
+        district,
+        reportedById: ctx.session.user.id,
+        status: IncidentStatus.REPORTED,
+      },
+      include: {
+        reportedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
         },
-        include: {
-          reportedBy: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
+      },
+    });
+
+    // Create audit log
+    await ctx.prisma.audit_logs.create({
+      data: {
+        userId: ctx.session.user.id,
+        action: 'incident_created',
+        entity: 'Incident',
+        entityId: incident.id,
+        changes: { severity: input.severity, category: input.category },
+      },
+    });
+
+    // Notify relevant agencies for critical/high severity incidents
+    if (input.severity === IncidentSeverity.CRITICAL || input.severity === IncidentSeverity.HIGH) {
+      // Find nearby agencies
+      const nearbyAgencies = await ctx.prisma.agency.findMany({
+        where: {
+          isActive: true,
+          type: {
+            in: ['AMBULANCE', 'FIRE_SERVICE', 'POLICE', 'NADMO'],
           },
         },
       });
 
-      // Create audit log
-      await ctx.prisma.audit_logs.create({
-        data: {
-          userId: ctx.session.user.id,
-          action: 'incident_created',
-          entity: 'Incident',
-          entityId: incident.id,
-          changes: { severity: input.severity, category: input.category },
-        },
-      });
-
-      // Notify relevant agencies for critical/high severity incidents
-      if (input.severity === IncidentSeverity.CRITICAL || input.severity === IncidentSeverity.HIGH) {
-        // Find nearby agencies
-        const nearbyAgencies = await ctx.prisma.agency.findMany({
-          where: {
-            isActive: true,
-            type: {
-              in: ['AMBULANCE', 'FIRE_SERVICE', 'POLICE', 'NADMO'],
-            },
-          },
+      // Notify agencies (in a real implementation, you'd filter by distance)
+      for (const agency of nearbyAgencies.slice(0, 5)) {
+        // Limit to 5 agencies to avoid spam
+        await sendToAgency(agency.id, {
+          type: NotificationType.INCIDENT_CREATED,
+          title: `New ${input.severity} Incident`,
+          message: `${input.title} - ${input.category} in ${input.district}`,
+          relatedEntityType: 'incident',
+          relatedEntityId: incident.id,
+          priority: input.severity === IncidentSeverity.CRITICAL ? 'critical' : 'high',
         });
+      }
+    }
 
-        // Notify agencies (in a real implementation, you'd filter by distance)
-        for (const agency of nearbyAgencies.slice(0, 5)) {
-          // Limit to 5 agencies to avoid spam
-          await sendToAgency(agency.id, {
-            type: NotificationType.INCIDENT_CREATED,
-            title: `New ${input.severity} Incident`,
-            message: `${input.title} - ${input.category} in ${input.district}`,
-            relatedEntityType: 'incident',
-            relatedEntityId: incident.id,
-            priority: input.severity === IncidentSeverity.CRITICAL ? 'critical' : 'high',
-          });
+    // Broadcast to all dispatchers in real-time
+    try {
+      await broadcastNewIncident({
+        id: incident.id,
+        category: incident.category,
+        severity: incident.severity,
+        latitude: incident.latitude,
+        longitude: incident.longitude,
+        region: incident.region,
+        title: incident.title,
+      });
+    } catch (error) {
+      console.error('Pusher notification error:', error);
+      // Don't fail the request if Pusher fails
+    }
+
+    return incident;
+  }),
+
+  getAll: protectedProcedure.input(incidentFiltersSchema).query(async ({ input, ctx }) => {
+    // Cache frequently accessed queries (5 minutes)
+    return cachedQuery(
+      'incidents.getAll',
+      { input, userId: ctx.session.user.id, role: ctx.session.user.role },
+      async () => {
+        const where: any = {};
+
+        // Apply filters
+        if (input.status) where.status = input.status;
+        if (input.severity) where.severity = input.severity;
+        if (input.category) where.category = input.category;
+        if (input.region) where.region = input.region;
+        if (input.district) where.district = input.district;
+        if (input.assignedAgencyId) where.assignedAgencyId = input.assignedAgencyId;
+        if (input.reportedById) where.reportedById = input.reportedById;
+
+        // Role-based filtering
+        if (ctx.session.user.role === 'CITIZEN') {
+          where.reportedById = ctx.session.user.id;
+        } else if (ctx.session.user.role === 'AGENCY_ADMIN' && ctx.session.user.agencyId) {
+          where.assignedAgencyId = ctx.session.user.agencyId;
         }
-      }
 
-      // Broadcast to all dispatchers in real-time
-      try {
-        await broadcastNewIncident({
-          id: incident.id,
-          category: incident.category,
-          severity: incident.severity,
-          latitude: incident.latitude,
-          longitude: incident.longitude,
-          region: incident.region,
-          title: incident.title,
-        });
-      } catch (error) {
-        console.error('Pusher notification error:', error);
-        // Don't fail the request if Pusher fails
-      }
-
-      return incident;
-    }),
-
-  getAll: protectedProcedure
-    .input(incidentFiltersSchema)
-    .query(async ({ input, ctx }) => {
-      // Cache frequently accessed queries (5 minutes)
-      return cachedQuery(
-        'incidents.getAll',
-        { input, userId: ctx.session.user.id, role: ctx.session.user.role },
-        async () => {
-          const where: any = {};
-
-          // Apply filters
-          if (input.status) where.status = input.status;
-          if (input.severity) where.severity = input.severity;
-          if (input.category) where.category = input.category;
-          if (input.region) where.region = input.region;
-          if (input.district) where.district = input.district;
-          if (input.assignedAgencyId) where.assignedAgencyId = input.assignedAgencyId;
-          if (input.reportedById) where.reportedById = input.reportedById;
-
-          // Role-based filtering
-          if (ctx.session.user.role === 'CITIZEN') {
-            where.reportedById = ctx.session.user.id;
-          } else if (ctx.session.user.role === 'AGENCY_ADMIN' && ctx.session.user.agencyId) {
-            where.assignedAgencyId = ctx.session.user.agencyId;
-          }
-
-          const [incidents, total] = await Promise.all([
-            ctx.prisma.incidents.findMany({
-              where,
-              include: {
-                users: {
-                  select: { id: true, name: true, email: true },
-                },
-                agencies: {
-                  select: { id: true, name: true, type: true },
-                },
+        const [incidents, total] = await Promise.all([
+          ctx.prisma.incidents.findMany({
+            where,
+            include: {
+              users: {
+                select: { id: true, name: true, email: true },
               },
-              orderBy: {
-                [input.sortBy]: input.sortOrder,
+              agencies: {
+                select: { id: true, name: true, type: true },
               },
-              skip: (input.page - 1) * input.pageSize,
-              take: input.pageSize,
-            }),
-            ctx.prisma.incidents.count({ where }),
-          ]);
-
-          return {
-            incidents,
-            pagination: {
-              page: input.page,
-              pageSize: input.pageSize,
-              total,
-              totalPages: Math.ceil(total / input.pageSize),
             },
-          };
-        },
-        300000 // 5 minutes cache
-      );
-    }),
+            orderBy: {
+              [input.sortBy]: input.sortOrder,
+            },
+            skip: (input.page - 1) * input.pageSize,
+            take: input.pageSize,
+          }),
+          ctx.prisma.incidents.count({ where }),
+        ]);
+
+        return {
+          incidents,
+          pagination: {
+            page: input.page,
+            pageSize: input.pageSize,
+            total,
+            totalPages: Math.ceil(total / input.pageSize),
+          },
+        };
+      },
+      300000 // 5 minutes cache
+    );
+  }),
 
   getById: protectedProcedure
     .input(z.object({ id: z.string().cuid() }))
@@ -359,7 +371,7 @@ export const incidentsRouter = createTRPCRouter({
       }
 
       const updateData: any = { status: input.status };
-      
+
       if (input.status === IncidentStatus.RESOLVED) {
         updateData.resolvedAt = new Date();
       } else if (input.status === IncidentStatus.CLOSED) {
@@ -477,39 +489,37 @@ export const incidentsRouter = createTRPCRouter({
       return updated;
     }),
 
-  getNearby: protectedProcedure
-    .input(nearbyIncidentsSchema)
-    .query(async ({ input, ctx }) => {
-      // Get all active incidents
-      const incidents = await ctx.prisma.incidents.findMany({
-        where: {
-          status: {
-            not: IncidentStatus.CLOSED,
-          },
+  getNearby: protectedProcedure.input(nearbyIncidentsSchema).query(async ({ input, ctx }) => {
+    // Get all active incidents
+    const incidents = await ctx.prisma.incidents.findMany({
+      where: {
+        status: {
+          not: IncidentStatus.CLOSED,
         },
-        include: {
-          assignedAgency: {
-            select: { id: true, name: true, type: true },
-          },
+      },
+      include: {
+        assignedAgency: {
+          select: { id: true, name: true, type: true },
         },
-      });
+      },
+    });
 
-      // Filter by distance
-      const nearby = incidents
-        .map((incident) => ({
-          ...incident,
-          distance: calculateDistance(
-            input.latitude,
-            input.longitude,
-            incident.latitude,
-            incident.longitude
-          ),
-        }))
-        .filter((incident) => incident.distance <= input.radius)
-        .sort((a, b) => a.distance - b.distance);
+    // Filter by distance
+    const nearby = incidents
+      .map((incident) => ({
+        ...incident,
+        distance: calculateDistance(
+          input.latitude,
+          input.longitude,
+          incident.latitude,
+          incident.longitude
+        ),
+      }))
+      .filter((incident) => incident.distance <= input.radius)
+      .sort((a, b) => a.distance - b.distance);
 
-      return nearby;
-    }),
+    return nearby;
+  }),
 
   getActive: protectedProcedure.query(async ({ ctx }) => {
     // Cache active incidents (1 minute - they change frequently)
@@ -655,10 +665,13 @@ export const incidentsRouter = createTRPCRouter({
       }
 
       // Map frontend updateType to Prisma UpdateType enum
-      const updateTypeMap: Record<'general' | 'responder' | 'media', 'NOTE_ADDED' | 'RESPONDER_UPDATE' | 'MEDIA_ADDED'> = {
-        'general': 'NOTE_ADDED',
-        'responder': 'RESPONDER_UPDATE',
-        'media': 'MEDIA_ADDED',
+      const updateTypeMap: Record<
+        'general' | 'responder' | 'media',
+        'NOTE_ADDED' | 'RESPONDER_UPDATE' | 'MEDIA_ADDED'
+      > = {
+        general: 'NOTE_ADDED',
+        responder: 'RESPONDER_UPDATE',
+        media: 'MEDIA_ADDED',
       };
 
       const update = await ctx.prisma.incidentsUpdate.create({
@@ -667,7 +680,8 @@ export const incidentsRouter = createTRPCRouter({
           userId: ctx.session.user.id,
           updateType: updateTypeMap[input.updateType],
           content: input.content,
-          metadata: input.mediaUrls.length > 0 ? ({ mediaUrls: input.mediaUrls } as any) : undefined,
+          metadata:
+            input.mediaUrls.length > 0 ? ({ mediaUrls: input.mediaUrls } as any) : undefined,
         },
         include: {
           user: {
@@ -679,4 +693,3 @@ export const incidentsRouter = createTRPCRouter({
       return update;
     }),
 });
-

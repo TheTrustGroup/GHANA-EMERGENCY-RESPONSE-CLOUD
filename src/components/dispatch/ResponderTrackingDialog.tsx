@@ -73,9 +73,7 @@ export function ResponderTrackingDialog({
       <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>Responder Tracking</DialogTitle>
-          <DialogDescription>
-            Real-time tracking for dispatch assignment
-          </DialogDescription>
+          <DialogDescription>Real-time tracking for dispatch assignment</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -134,18 +132,24 @@ export function ResponderTrackingDialog({
             <div className="space-y-1 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Dispatched</span>
-                <span>{formatDistanceToNow(new Date(currentDispatch.dispatchedAt), { addSuffix: true })}</span>
+                <span>
+                  {formatDistanceToNow(new Date(currentDispatch.dispatchedAt), { addSuffix: true })}
+                </span>
               </div>
               {currentDispatch.acceptedAt && (
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Accepted</span>
-                  <span>{formatDistanceToNow(new Date(currentDispatch.acceptedAt), { addSuffix: true })}</span>
+                  <span>
+                    {formatDistanceToNow(new Date(currentDispatch.acceptedAt), { addSuffix: true })}
+                  </span>
                 </div>
               )}
               {currentDispatch.arrivedAt && (
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Arrived</span>
-                  <span>{formatDistanceToNow(new Date(currentDispatch.arrivedAt), { addSuffix: true })}</span>
+                  <span>
+                    {formatDistanceToNow(new Date(currentDispatch.arrivedAt), { addSuffix: true })}
+                  </span>
                 </div>
               )}
             </div>
@@ -165,4 +169,3 @@ export function ResponderTrackingDialog({
     </Dialog>
   );
 }
-

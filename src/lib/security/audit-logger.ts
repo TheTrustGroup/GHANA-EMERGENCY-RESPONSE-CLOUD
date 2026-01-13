@@ -25,7 +25,7 @@ export async function logSecurityEvent(entry: AuditLogEntry): Promise<void> {
   try {
     // System user ID for system-generated events
     const systemUserId = 'system';
-    
+
     await prisma.audit_logs.create({
       data: {
         userId: entry.userId || systemUserId,
@@ -129,7 +129,13 @@ export async function logDataModification(
  * Log security event
  */
 export async function logSecurityIncident(
-  type: 'rate_limit' | 'suspicious_pattern' | 'sql_injection' | 'xss' | 'path_traversal' | 'csrf_failure',
+  type:
+    | 'rate_limit'
+    | 'suspicious_pattern'
+    | 'sql_injection'
+    | 'xss'
+    | 'path_traversal'
+    | 'csrf_failure',
   details: {
     userId?: string;
     ipAddress?: string;
@@ -158,10 +164,7 @@ export async function logSecurityIncident(
 /**
  * Log system event
  */
-export async function logSystemEvent(
-  action: string,
-  details?: Record<string, any>
-): Promise<void> {
+export async function logSystemEvent(action: string, details?: Record<string, any>): Promise<void> {
   await logSecurityEvent({
     action: `system_${action}`,
     entity: 'System',
@@ -169,4 +172,3 @@ export async function logSystemEvent(
     result: 'success',
   });
 }
-

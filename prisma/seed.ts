@@ -17,7 +17,12 @@ const GHANA_LOCATIONS = {
   accra: { lat: 5.6037, lon: -0.187, region: 'Greater Accra', district: 'Accra Metropolitan' },
   tema: { lat: 5.6833, lon: -0.0167, region: 'Greater Accra', district: 'Tema Metropolitan' },
   kumasi: { lat: 6.6885, lon: -1.6244, region: 'Ashanti', district: 'Kumasi Metropolitan' },
-  takoradi: { lat: 4.8845, lon: -1.7554, region: 'Western', district: 'Sekondi-Takoradi Metropolitan' },
+  takoradi: {
+    lat: 4.8845,
+    lon: -1.7554,
+    region: 'Western',
+    district: 'Sekondi-Takoradi Metropolitan',
+  },
   tamale: { lat: 9.4008, lon: -0.8393, region: 'Northern', district: 'Tamale Metropolitan' },
 };
 
@@ -531,10 +536,10 @@ async function main(): Promise<void> {
         },
       });
     } else {
-      await     prisma.users.create({
-      data: {
-        id: generateId('user'),
-        updatedAt: new Date(),
+      await prisma.users.create({
+        data: {
+          id: generateId('user'),
+          updatedAt: new Date(),
           ...account,
           passwordHash: await hashPassword('Test1234'),
           isActive: true,
@@ -555,7 +560,9 @@ async function main(): Promise<void> {
   console.log(`   - Responders: ${responders.length}`);
   console.log(`   - Citizens: ${citizens.length}`);
   console.log(`   - Simple Test Accounts: ${testAccounts.length}`);
-  console.log(`   - Total Users: ${1 + agencyAdmins.length + dispatchers.length + responders.length + citizens.length + testAccounts.length}`);
+  console.log(
+    `   - Total Users: ${1 + agencyAdmins.length + dispatchers.length + responders.length + citizens.length + testAccounts.length}`
+  );
   console.log('\n🔑 Default Passwords:');
   console.log('   - Admin: Admin@123');
   console.log('   - Dispatcher: Dispatcher@123');
@@ -572,4 +579,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-
