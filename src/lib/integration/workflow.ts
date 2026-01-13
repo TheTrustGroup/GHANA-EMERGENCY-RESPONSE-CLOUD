@@ -29,7 +29,7 @@ export async function handleNewIncident(incidentData: {
   reporterName?: string;
   region: string;
   district: string;
-}) {
+}): Promise<any> {
   // 1. Validate data
   if (!incidentData.latitude || !incidentData.longitude) {
     throw new Error('Location is required');
@@ -101,9 +101,10 @@ export async function handleNewIncident(incidentData: {
 
   // 6. Create audit log
   if (incidentData.reportedById) {
+    const auditId = `audit-${Date.now()}-${Math.random().toString(36).substring(7)}`;
     await prisma.audit_logs.create({
       data: {
-        id: `audit-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+        id: auditId,
         userId: incidentData.reportedById,
         action: 'INCIDENT_CREATED',
         entity: 'Incident',
@@ -149,9 +150,10 @@ export async function handleDispatchAssignment(assignmentData: {
   }
 
   // 3. Create assignment
+  const dispatchId = `dispatch-${Date.now()}-${Math.random().toString(36).substring(7)}`;
   const assignment = await prisma.dispatch_assignments.create({
     data: {
-      id: `dispatch-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+      id: dispatchId,
       incidentId: assignmentData.incidentId,
       agencyId: assignmentData.agencyId,
       responderId: assignmentData.responderId!,
@@ -210,9 +212,10 @@ export async function handleDispatchAssignment(assignmentData: {
   }
 
   // 8. Create audit log
+  const auditId = `audit-${Date.now()}-${Math.random().toString(36).substring(7)}`;
   await prisma.audit_logs.create({
     data: {
-      id: `audit-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+      id: auditId,
       userId: assignmentData.dispatcherId,
       action: 'CREATE_DISPATCH',
       entity: 'DispatchAssignment',
@@ -302,9 +305,10 @@ export async function handleStatusUpdate(updateData: {
   }
 
   // 4. Create incident update
+  const updateId = `update-${Date.now()}-${Math.random().toString(36).substring(7)}`;
   await prisma.incident_updates.create({
     data: {
-      id: `update-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+      id: updateId,
       incidentId: assignment.incidentId,
       userId: updateData.userId,
       updateType: 'RESPONDER_UPDATE',
