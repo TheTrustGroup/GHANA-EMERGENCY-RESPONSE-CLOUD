@@ -10,7 +10,7 @@ import { authOptions } from '@/lib/auth';
 export async function POST(request: NextRequest) {
   try {
     // Get session (optional - analytics can work without auth)
-    const session = await getServerSession(authOptions);
+    // const session = await getServerSession(authOptions);
 
     // Parse body
     const body = await request.json();
