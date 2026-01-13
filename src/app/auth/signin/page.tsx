@@ -25,7 +25,7 @@ function SignInContent() {
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [usePhone, setUsePhone] = useState(false);
+  const [usePhone, setUsePhone] = useState(true); // Default to phone for Ghana users
 
   const {
     register,
@@ -144,8 +144,11 @@ function SignInContent() {
                 </Label>
                 <button
                   type="button"
-                  onClick={() => setUsePhone(!usePhone)}
-                  className="text-left text-xs text-blue-600 hover:underline sm:text-right sm:text-sm"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setUsePhone(!usePhone);
+                  }}
+                  className="text-left text-xs font-medium text-blue-600 hover:text-blue-700 active:text-blue-800 underline sm:text-right sm:text-sm"
                 >
                   Use {usePhone ? 'Email' : 'Phone'} instead
                 </button>
@@ -153,11 +156,18 @@ function SignInContent() {
               <Input
                 id="identifier"
                 type={usePhone ? 'tel' : 'email'}
-                placeholder={usePhone ? '+233XXXXXXXXX or 024XXXXXXXX' : 'email@example.com'}
+                placeholder={usePhone ? '+233501234567 or 0501234567' : 'email@example.com'}
                 className="text-sm sm:text-base"
                 {...register('identifier')}
                 disabled={isLoading}
+                autoComplete={usePhone ? 'tel' : 'email'}
+                inputMode={usePhone ? 'tel' : 'email'}
               />
+              {usePhone && (
+                <p className="text-xs text-gray-500 sm:text-sm">
+                  Enter your phone number with country code (+233) or local format (0XX)
+                </p>
+              )}
               {errors.identifier && (
                 <p className="text-xs text-destructive sm:text-sm">{errors.identifier.message}</p>
               )}
