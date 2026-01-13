@@ -190,7 +190,7 @@ export async function handleDispatchAssignment(assignmentData: {
     });
 
     // TODO: Send SMS
-    console.log(`SMS would be sent to ${assignment.responder.phone}`);
+    console.log(`SMS would be sent to ${assignment.users.phone}`);
   }
 
   // 6. Broadcast to all relevant channels
