@@ -601,7 +601,7 @@ export const dispatchRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const assignment = await ctx.prisma.dispatch_assignments.findUnique({
         where: { id: input.assignmentId },
-        include: { incident: true },
+        include: { incidents: true },
       });
 
       if (!assignment) {
