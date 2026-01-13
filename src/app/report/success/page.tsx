@@ -5,12 +5,13 @@
  * Confirmation after emergency report submission
  */
 
+import { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CheckCircle, Home, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
-export default function ReportSuccess() {
+function ReportSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const reportId = searchParams.get('id');
@@ -78,5 +79,20 @@ export default function ReportSuccess() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ReportSuccess() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <ReportSuccessContent />
+    </Suspense>
   );
 }

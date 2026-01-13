@@ -52,8 +52,7 @@ export default function ReportEmergency() {
 
   // Form state
   const [formData, setFormData] = useState<EmergencyFormData>(() => {
-    // Load from localStorage on mount
-    const saved = loadFromLocalStorage('emergency-report') as EmergencyFormData | null;
+    // Initialize with default data (localStorage will be loaded in useEffect)
     const defaultData: EmergencyFormData = {
       category: null,
       latitude: null,
@@ -62,11 +61,23 @@ export default function ReportEmergency() {
       mediaFiles: [],
       description: '',
     };
-    return saved || defaultData;
+    return defaultData;
   });
 
-  // Auto-save to localStorage every 5 seconds
+  // Load from localStorage on client-side mount
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = loadFromLocalStorage('emergency-report') as EmergencyFormData | null;
+      if (saved) {
+        setFormData(saved);
+      }
+    }
+  }, []);
+
+  // Auto-save to localStorage every 5 seconds (client-side only)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
     const interval = setInterval(() => {
       saveToLocalStorage('emergency-report', formData);
     }, 5000);
@@ -154,8 +165,10 @@ export default function ReportEmergency() {
 
   const createIncident = trpc.incidents.create.useMutation({
     onSuccess: (data) => {
-      // Clear localStorage
-      localStorage.removeItem('emergency-report');
+      // Clear localStorage (client-side only)
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('emergency-report');
+      }
       
       // Show success and redirect
       toast({

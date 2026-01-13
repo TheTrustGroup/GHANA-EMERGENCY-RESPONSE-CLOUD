@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { validateFile, compressImage, FileUploadProgress } from '@/lib/upload';
 import { trpc } from '@/lib/trpc/client';
 import { useToast } from '@/hooks/use-toast';
+import { createClient } from '@supabase/supabase-js';
 
 interface MediaUploaderProps {
   maxFiles?: number;
@@ -88,63 +89,54 @@ export function MediaUploader({ maxFiles = 5, maxSizeMB = 10, value, onChange }:
 
   const uploadFile = async (file: File) => {
     try {
-      // Get presigned URL
-      const { url, key } = await getPresignedUrl.mutateAsync({
+      // Get upload path from backend
+      const { filePath, fileUrl, supabaseUrl, bucketName } = await getPresignedUrl.mutateAsync({
         filename: file.name,
         contentType: file.type,
       });
 
-      // Upload to S3
-      const xhr = new XMLHttpRequest();
+      // Initialize Supabase client
+      const supabase = createClient(
+        supabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+      );
 
-      xhr.upload.addEventListener('progress', (e) => {
-        if (e.lengthComputable) {
-          const progress = (e.loaded / e.total) * 100;
-          setUploads((prev) =>
-            prev.map((u) =>
-              u.file === file ? { ...u, progress, status: 'uploading' } : u
-            )
-          );
-        }
-      });
+      // Update progress to uploading
+      setUploads((prev) =>
+        prev.map((u) =>
+          u.file === file ? { ...u, progress: 10, status: 'uploading' } : u
+        )
+      );
 
-      xhr.addEventListener('load', () => {
-        if (xhr.status === 200) {
-          // Construct S3 URL from key
-          const bucketName = process.env.NEXT_PUBLIC_S3_BUCKET || '';
-          const region = process.env.NEXT_PUBLIC_AWS_REGION || 'us-east-1';
-          const fileUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${key}`;
-          setUploads((prev) =>
-            prev.map((u) =>
-              u.file === file
-                ? { ...u, progress: 100, status: 'success', url: fileUrl }
-                : u
-            )
-          );
-          onChange([...value, fileUrl]);
-        } else {
-          throw new Error(`Upload failed with status ${xhr.status}`);
-        }
-      });
+      // Upload to Supabase Storage
+      // Note: Supabase doesn't support progress callbacks, so we simulate progress
+      setUploads((prev) =>
+        prev.map((u) =>
+          u.file === file ? { ...u, progress: 50, status: 'uploading' } : u
+        )
+      );
 
-      xhr.addEventListener('error', () => {
-        setUploads((prev) =>
-          prev.map((u) =>
-            u.file === file
-              ? { ...u, status: 'error', error: 'Upload failed' }
-              : u
-          )
-        );
-        toast({
-          title: 'Upload failed',
-          description: 'Failed to upload file. Please try again.',
-          variant: 'destructive',
+      const { error } = await supabase.storage
+        .from(bucketName || 'incident-reports')
+        .upload(filePath, file, {
+          contentType: file.type,
+          upsert: false,
         });
-      });
 
-      xhr.open('PUT', url);
-      xhr.setRequestHeader('Content-Type', file.type);
-      xhr.send(file);
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      // Upload successful
+      const finalUrl = fileUrl || `${supabaseUrl}/storage/v1/object/public/${bucketName || 'incident-reports'}/${filePath}`;
+      setUploads((prev) =>
+        prev.map((u) =>
+          u.file === file
+            ? { ...u, progress: 100, status: 'success', url: finalUrl }
+            : u
+        )
+      );
+      onChange([...value, finalUrl]);
     } catch (error) {
       console.error('Upload error:', error);
       setUploads((prev) =>

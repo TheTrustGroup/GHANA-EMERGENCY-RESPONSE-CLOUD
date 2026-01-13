@@ -1,25 +1,34 @@
 /**
  * Presigned URL API Route
- * Generates presigned URLs for direct S3/R2 uploads
+ * Generates presigned URLs for Supabase Storage uploads
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { createClient } from '@supabase/supabase-js';
 
-// Initialize S3 client
-const s3 = new S3Client({
-  region: process.env.AWS_REGION || 'us-east-1',
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
-  },
-});
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+// Initialize Supabase admin client
+const supabase = supabaseServiceKey
+  ? createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    })
+  : null;
+
+const BUCKET_NAME = 'incident-reports';
 
 export async function POST(req: NextRequest) {
   try {
-    // Require authentication (optional - can allow anonymous for emergency reports)
-    // await requireAuth();
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Supabase not configured' },
+        { status: 500 }
+      );
+    }
 
     const { filename, contentType, size } = await req.json();
 
@@ -58,22 +67,28 @@ export async function POST(req: NextRequest) {
     const timestamp = Date.now();
     const random = Math.random().toString(36).substring(2, 15);
     const extension = filename.split('.').pop();
-    const key = `incidents/${timestamp}-${random}.${extension}`;
+    const filePath = `incidents/${timestamp}-${random}.${extension}`;
 
-    // Create presigned URL (valid for 5 minutes)
-    const command = new PutObjectCommand({
-      Bucket: process.env.AWS_S3_BUCKET || '',
-      Key: key,
-      ContentType: contentType,
-      // Make it public (or use ACL: 'public-read' if needed)
+    // For Supabase, we'll return a token-based upload approach
+    // The client will upload directly using the Supabase client
+    // Return the file path and public URL instead of presigned URL
+    
+    // Public URL (for public buckets)
+    const { data: publicUrlData } = supabase.storage
+      .from(BUCKET_NAME)
+      .getPublicUrl(filePath);
+
+    const fileUrl = publicUrlData.publicUrl;
+
+    // Return file path for client-side upload
+    return NextResponse.json({
+      filePath,
+      fileUrl,
+      key: filePath,
+      // Include Supabase URL and anon key for client-side upload
+      supabaseUrl: supabaseUrl,
+      bucketName: BUCKET_NAME,
     });
-
-    const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 300 });
-
-    // Public URL
-    const fileUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${key}`;
-
-    return NextResponse.json({ uploadUrl, fileUrl, key });
   } catch (error) {
     console.error('Presigned URL error:', error);
     return NextResponse.json(

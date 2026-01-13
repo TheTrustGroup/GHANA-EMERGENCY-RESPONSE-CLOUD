@@ -5,7 +5,7 @@
  * Step-by-step report configuration
  */
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import { RootLayout } from '@/components/layout';
@@ -32,7 +32,7 @@ const STEPS = [
   { id: 'preview', title: 'Preview & Save' },
 ];
 
-export default function NewReportPage() {
+function NewReportContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -437,3 +437,21 @@ export default function NewReportPage() {
   );
 }
 
+export default function NewReportPage() {
+  return (
+    <Suspense fallback={
+      <RootLayout>
+        <DashboardShell>
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading...</p>
+            </div>
+          </div>
+        </DashboardShell>
+      </RootLayout>
+    }>
+      <NewReportContent />
+    </Suspense>
+  );
+}

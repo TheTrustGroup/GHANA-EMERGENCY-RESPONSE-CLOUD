@@ -1,9 +1,10 @@
 /**
  * Simple File Upload Utility
- * Uploads files to S3/R2 with compression
+ * Uploads files to Supabase Storage with compression
  */
 
 import imageCompression from 'browser-image-compression';
+import { createClient } from '@supabase/supabase-js';
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 const MAX_IMAGE_WIDTH = 1920;
@@ -36,14 +37,14 @@ async function compressImage(file: File): Promise<File> {
 }
 
 /**
- * Upload file to cloud storage
+ * Upload file to Supabase Storage
  */
 export async function uploadToCloud(file: File): Promise<string> {
   try {
     // Step 1: Compress if needed
     const processedFile = await compressImage(file);
 
-    // Step 2: Get presigned URL from backend
+    // Step 2: Get upload path from backend
     const response = await fetch('/api/upload/presigned', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -55,26 +56,31 @@ export async function uploadToCloud(file: File): Promise<string> {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to get upload URL');
+      throw new Error('Failed to get upload path');
     }
 
-    const { uploadUrl, fileUrl } = await response.json();
+    const { filePath, fileUrl, supabaseUrl, bucketName } = await response.json();
 
-    // Step 3: Upload directly to S3/R2
-    const uploadResponse = await fetch(uploadUrl, {
-      method: 'PUT',
-      body: processedFile,
-      headers: {
-        'Content-Type': processedFile.type,
-      },
-    });
+    // Step 3: Upload directly to Supabase Storage using client
+    const supabase = createClient(
+      supabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    );
 
-    if (!uploadResponse.ok) {
-      throw new Error('Failed to upload file');
+    const { error } = await supabase.storage
+      .from(bucketName || 'incident-reports')
+      .upload(filePath, processedFile, {
+        contentType: processedFile.type,
+        upsert: false,
+      });
+
+    if (error) {
+      console.error('Supabase upload error:', error);
+      throw new Error(`Upload failed: ${error.message}`);
     }
 
     // Step 4: Return public URL
-    return fileUrl;
+    return fileUrl || `${supabaseUrl}/storage/v1/object/public/${bucketName || 'incident-reports'}/${filePath}`;
   } catch (error) {
     console.error('Upload error:', error);
     throw error;
