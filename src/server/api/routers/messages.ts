@@ -82,7 +82,7 @@ export const messagesRouter = createTRPCRouter({
           id: msg.id,
           content: msg.content,
           senderId: msg.senderId,
-          sender: msg.sender,
+          sender: msg.users,
           isSystemMessage: msg.isSystemMessage,
           createdAt: msg.createdAt,
         })),
