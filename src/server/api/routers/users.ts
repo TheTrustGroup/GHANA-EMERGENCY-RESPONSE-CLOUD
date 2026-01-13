@@ -193,7 +193,7 @@ export const usersRouter = createTRPCRouter({
         role: true,
         isActive: true,
         createdAt: true,
-        agency: {
+        agencies: {
           select: {
             id: true,
             name: true,
