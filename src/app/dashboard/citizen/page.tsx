@@ -464,12 +464,13 @@ function IncidentCard({ incident, router }: any) {
 
   const config = statusConfig[incident.status] || statusConfig.REPORTED;
 
-  const severityColor: Record<string, string> = {
+  const severityColorMap: Record<string, string> = {
     CRITICAL: 'text-red-600',
     HIGH: 'text-orange-600',
     MEDIUM: 'text-yellow-600',
     LOW: 'text-green-600',
-  }[incident.severity] || 'text-gray-600';
+  };
+  const severityColor = severityColorMap[incident.severity] || 'text-gray-600';
 
   return (
     <motion.div
