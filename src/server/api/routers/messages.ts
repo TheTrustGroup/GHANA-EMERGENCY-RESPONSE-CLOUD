@@ -59,7 +59,7 @@ export const messagesRouter = createTRPCRouter({
         ctx.prisma.messages.findMany({
           where: { incidentId: input.incidentId },
           include: {
-            sender: {
+            users: {
               select: {
                 id: true,
                 name: true,
