@@ -411,6 +411,77 @@ async function main(): Promise<void> {
   ]);
   console.log(`✅ Created ${citizens.length} citizens`);
 
+  // Create simple test accounts (all use Test1234)
+  console.log('🔐 Creating simple test accounts...');
+  const testAccounts = [
+    {
+      email: 'admin@test.com',
+      phone: formatGhanaPhone('0244555555'),
+      name: 'Test System Admin',
+      role: UserRole.SYSTEM_ADMIN,
+      agencyId: null,
+    },
+    {
+      email: 'citizen@test.com',
+      phone: formatGhanaPhone('0244111111'),
+      name: 'Test Citizen',
+      role: UserRole.CITIZEN,
+      agencyId: null,
+    },
+    {
+      email: 'dispatcher@test.com',
+      phone: formatGhanaPhone('0244222222'),
+      name: 'Test Dispatcher',
+      role: UserRole.DISPATCHER,
+      agencyId: agencies[0]?.id || null,
+    },
+    {
+      email: 'responder@test.com',
+      phone: formatGhanaPhone('0244333333'),
+      name: 'Test Responder',
+      role: UserRole.RESPONDER,
+      agencyId: agencies[0]?.id || null,
+    },
+    {
+      email: 'agency@test.com',
+      phone: formatGhanaPhone('0244444444'),
+      name: 'Test Agency Admin',
+      role: UserRole.AGENCY_ADMIN,
+      agencyId: agencies[0]?.id || null,
+    },
+  ];
+
+  for (const account of testAccounts) {
+    const existing = await prisma.user.findUnique({
+      where: { email: account.email },
+    });
+
+    if (existing) {
+      await prisma.user.update({
+        where: { email: account.email },
+        data: {
+          passwordHash: await hashPassword('Test1234'),
+          isActive: true,
+          emailVerified: new Date(),
+          phoneVerified: new Date(),
+          role: account.role,
+          agencyId: account.agencyId,
+        },
+      });
+    } else {
+      await prisma.user.create({
+        data: {
+          ...account,
+          passwordHash: await hashPassword('Test1234'),
+          isActive: true,
+          emailVerified: new Date(),
+          phoneVerified: new Date(),
+        },
+      });
+    }
+  }
+  console.log(`✅ Created/updated ${testAccounts.length} simple test accounts`);
+
   console.log('\n✅ Database seed completed successfully!');
   console.log('\n📊 Summary:');
   console.log(`   - Agencies: ${agencies.length}`);
@@ -419,12 +490,14 @@ async function main(): Promise<void> {
   console.log(`   - Dispatchers: ${dispatchers.length}`);
   console.log(`   - Responders: ${responders.length}`);
   console.log(`   - Citizens: ${citizens.length}`);
-  console.log(`   - Total Users: ${1 + agencyAdmins.length + dispatchers.length + responders.length + citizens.length}`);
+  console.log(`   - Simple Test Accounts: ${testAccounts.length}`);
+  console.log(`   - Total Users: ${1 + agencyAdmins.length + dispatchers.length + responders.length + citizens.length + testAccounts.length}`);
   console.log('\n🔑 Default Passwords:');
   console.log('   - Admin: Admin@123');
   console.log('   - Dispatcher: Dispatcher@123');
   console.log('   - Responder: Responder@123');
   console.log('   - Citizen: Citizen@123');
+  console.log('   - Simple Test Accounts: Test1234 (admin@test.com, citizen@test.com, etc.)');
 }
 
 main()

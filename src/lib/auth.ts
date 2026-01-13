@@ -27,14 +27,17 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.identifier || !credentials?.password) {
+          console.error('[AUTH] Missing credentials');
           throw new Error('Email/phone and password are required');
         }
 
-        // Rate limiting
+        // Normalize identifier early
         const identifier = credentials.identifier.toLowerCase().trim();
         const rateLimitKey = `login:${identifier}`;
 
-        if (checkRateLimit(rateLimitKey, 5, 15 * 60 * 1000)) {
+        // Check rate limiting (but don't block on first few attempts)
+        if (checkRateLimit(rateLimitKey, 10, 15 * 60 * 1000)) {
+          console.error(`[AUTH] Rate limit exceeded for: ${identifier}`);
           throw new Error(
             'Too many login attempts. Please try again in 15 minutes.'
           );
@@ -45,6 +48,9 @@ export const authOptions: NextAuthOptions = {
           let normalizedIdentifier = identifier;
           if (identifier.match(/^(\+?233|0)/)) {
             normalizedIdentifier = formatGhanaPhone(identifier);
+            console.log(`[AUTH] Normalized phone: ${identifier} -> ${normalizedIdentifier}`);
+          } else {
+            console.log(`[AUTH] Using email: ${normalizedIdentifier}`);
           }
 
           // Validate credentials
@@ -54,8 +60,12 @@ export const authOptions: NextAuthOptions = {
           );
 
           if (!user) {
-            throw new Error('Invalid email/phone or password');
+            console.error(`[AUTH] Invalid credentials for: ${identifier}`);
+            // Don't throw here - let it return null so NextAuth handles it
+            return null;
           }
+
+          console.log(`[AUTH] Successfully authenticated: ${user.email} (${user.role})`);
 
           // Clear rate limit on successful login
           clearRateLimit(rateLimitKey);
@@ -69,8 +79,9 @@ export const authOptions: NextAuthOptions = {
             isActive: user.isActive,
           };
         } catch (error) {
-          console.error('Authentication error:', error);
-          throw error;
+          console.error('[AUTH] Authentication error:', error);
+          // Return null instead of throwing to let NextAuth handle the error properly
+          return null;
         }
       },
     }),
@@ -223,37 +234,48 @@ export async function validateCredentials(
     // Check if identifier looks like an email or phone
     const isEmail = normalizedIdentifier.includes('@');
     
+    console.log(`[VALIDATE] Looking up user with identifier: ${normalizedIdentifier} (isEmail: ${isEmail})`);
+    
     // Try to find user by email (case-insensitive) or phone
+    // Use both email and phone in OR to handle edge cases
     const user = await prisma.user.findFirst({
       where: {
-        OR: isEmail
-          ? [
-              // For email, use lowercase comparison
-              { email: normalizedIdentifier },
-            ]
-          : [
-              // For phone, use exact match (already formatted)
-              { phone: identifier },
-            ],
+        OR: [
+          // Always try email match (case-insensitive via lowercase)
+          { email: normalizedIdentifier },
+          // Also try phone match (in case identifier wasn't normalized)
+          { phone: identifier },
+          // Try phone with normalized identifier too
+          ...(isEmail ? [] : [{ phone: normalizedIdentifier }]),
+        ],
         isActive: true,
       },
     });
 
     if (!user) {
+      console.error(`[VALIDATE] User not found: ${normalizedIdentifier}`);
       return null;
     }
+
+    console.log(`[VALIDATE] User found: ${user.email} (Active: ${user.isActive})`);
 
     // Verify password
     const isValid = await verifyPassword(password, user.passwordHash);
 
     if (!isValid) {
+      console.error(`[VALIDATE] Invalid password for: ${user.email}`);
       return null;
     }
+
+    console.log(`[VALIDATE] Password verified for: ${user.email}`);
 
     // Update last login
     await prisma.user.update({
       where: { id: user.id },
       data: { lastLoginAt: new Date() },
+    }).catch(err => {
+      // Don't fail login if last login update fails
+      console.error('[VALIDATE] Failed to update last login:', err);
     });
 
     return {
@@ -265,7 +287,7 @@ export async function validateCredentials(
       isActive: user.isActive,
     };
   } catch (error) {
-    console.error('Error validating credentials:', error);
+    console.error('[VALIDATE] Error validating credentials:', error);
     return null;
   }
 }
