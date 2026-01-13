@@ -225,11 +225,9 @@ export async function validateCredentials(
   try {
     // Normalize identifier - check if it's email or phone first
     const isEmail = identifier.includes('@');
-    
+
     // For emails, lowercase. For phones, use as-is (already formatted)
-    const normalizedIdentifier = isEmail 
-      ? identifier.toLowerCase().trim()
-      : identifier.trim();
+    const normalizedIdentifier = isEmail ? identifier.toLowerCase().trim() : identifier.trim();
 
     console.log(
       `[VALIDATE] Looking up user with identifier: ${normalizedIdentifier} (isEmail: ${isEmail}, original: ${identifier})`
@@ -254,7 +252,9 @@ export async function validateCredentials(
     });
 
     if (!user) {
-      console.error(`[VALIDATE] User not found: ${normalizedIdentifier} (type: ${isEmail ? 'email' : 'phone'})`);
+      console.error(
+        `[VALIDATE] User not found: ${normalizedIdentifier} (type: ${isEmail ? 'email' : 'phone'})`
+      );
       // Try alternative lookup for debugging
       if (isEmail) {
         const allUsers = await prisma.user.findMany({
@@ -262,12 +262,16 @@ export async function validateCredentials(
           select: { email: true, isActive: true },
           take: 3,
         });
-        console.error(`[VALIDATE] Similar emails found: ${allUsers.map(u => u.email).join(', ')}`);
+        console.error(
+          `[VALIDATE] Similar emails found: ${allUsers.map((u) => u.email).join(', ')}`
+        );
       }
       return null;
     }
 
-    console.log(`[VALIDATE] User found: ${user.email} (Active: ${user.isActive}, Role: ${user.role})`);
+    console.log(
+      `[VALIDATE] User found: ${user.email} (Active: ${user.isActive}, Role: ${user.role})`
+    );
 
     // Verify password
     const isValid = await verifyPassword(password, user.passwordHash);

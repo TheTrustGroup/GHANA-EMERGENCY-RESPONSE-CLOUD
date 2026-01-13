@@ -43,6 +43,9 @@ const nextConfig = {
       };
     }
     
+    // Ignore source map warnings
+    config.ignoreWarnings = [/Failed to parse source map/];
+    
     // Optimize bundle size
     if (!isServer) {
       config.optimization = {
@@ -92,7 +95,7 @@ const nextConfig = {
           },
           {
             key: 'X-Frame-Options',
-            value: 'DENY',
+            value: 'SAMEORIGIN',
           },
           {
             key: 'X-Content-Type-Options',
@@ -108,20 +111,24 @@ const nextConfig = {
           },
           {
             key: 'Permissions-Policy',
-            value: 'geolocation=(self), microphone=(), camera=()',
+            value: 'camera=*, microphone=*, geolocation=*',
           },
           {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://api.mapbox.com",
-              "style-src 'self' 'unsafe-inline' https://api.mapbox.com",
-              "img-src 'self' data: https: blob:",
-              "font-src 'self' data:",
-              "connect-src 'self' https://api.mapbox.com https://*.pusher.com wss://*.pusher.com",
-              "frame-ancestors 'none'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://api.mapbox.com https://vercel.live https://*.vercel-scripts.com",
+              "style-src 'self' 'unsafe-inline' https://api.mapbox.com https://fonts.googleapis.com",
+              "img-src 'self' data: blob: https: http:",
+              "font-src 'self' data: https://fonts.gstatic.com",
+              "connect-src 'self' https://api.mapbox.com https://*.pusher.com wss://*.pusher.com https://sockjs.pusher.com https://vercel.live https://*.vercel.app",
+              "frame-src 'self' https://www.google.com https://maps.google.com",
+              "worker-src 'self' blob:",
+              "child-src 'self' blob:",
+              "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",
+              "frame-ancestors 'self'",
               "upgrade-insecure-requests",
             ].join('; '),
           },
