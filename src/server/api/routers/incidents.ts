@@ -391,7 +391,7 @@ export const incidentsRouter = createTRPCRouter({
       });
 
       // Add update record
-      await ctx.prisma.incidentsUpdate.create({
+      await ctx.prisma.incident_updates.create({
         data: {
           incidentId: input.id,
           userId: ctx.session.user.id,
@@ -626,7 +626,7 @@ export const incidentsRouter = createTRPCRouter({
         });
       }
 
-      const updates = await ctx.prisma.incidentsUpdate.findMany({
+      const updates = await ctx.prisma.incident_updates.findMany({
         where: { incidentId: input.id },
         include: {
           user: {
@@ -683,7 +683,7 @@ export const incidentsRouter = createTRPCRouter({
         media: 'MEDIA_ADDED',
       };
 
-      const update = await ctx.prisma.incidentsUpdate.create({
+      const update = await ctx.prisma.incident_updates.create({
         data: {
           incidentId: input.incidentId,
           userId: ctx.session.user.id,
