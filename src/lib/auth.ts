@@ -60,7 +60,9 @@ export const authOptions: NextAuthOptions = {
             console.error(`[AUTH] Invalid credentials for: ${rawIdentifier}`);
             // Don't throw here - let it return null so NextAuth handles it
             return null;
-          }`);
+          }
+
+          console.log(`[AUTH] Successfully authenticated: ${user.email} (${user.role})`);
 
           // Clear rate limit on successful login
           clearRateLimit(rateLimitKey);
