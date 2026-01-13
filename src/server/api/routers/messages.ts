@@ -305,7 +305,7 @@ export const messagesRouter = createTRPCRouter({
           OR: [
             ...(incident.reportedById ? [{ id: incident.reportedById }] : []),
             { id: { in: Array.from(senderIds) } },
-            ...(incident.assignedAgency ? [{ agencyId: incident.assignedAgencyId }] : []),
+            ...(incident.agencies ? [{ agencyId: incident.assignedAgencyId }] : []),
           ],
         },
         select: {
