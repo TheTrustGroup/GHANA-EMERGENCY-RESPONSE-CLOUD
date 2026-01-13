@@ -166,14 +166,18 @@ describe('Analytics Calculations', () => {
       const fastAgency = {
         id: 'agency-1',
         name: 'Fast Agency',
-        incidents: [{ ...createMockIncident(), status: IncidentStatus.RESOLVED }] as unknown as Incident[],
+        incidents: [
+          { ...createMockIncident(), status: IncidentStatus.RESOLVED },
+        ] as unknown as Incident[],
         avgResponseTime: 15, // Fast
       };
 
       const slowAgency = {
         id: 'agency-2',
         name: 'Slow Agency',
-        incidents: [{ ...createMockIncident(), status: IncidentStatus.RESOLVED }] as unknown as Incident[],
+        incidents: [
+          { ...createMockIncident(), status: IncidentStatus.RESOLVED },
+        ] as unknown as Incident[],
         avgResponseTime: 120, // Slow
       };
 
@@ -188,7 +192,9 @@ describe('Analytics Calculations', () => {
       const agency = {
         id: 'agency-1',
         name: 'Test Agency',
-        incidents: [{ ...createMockIncident(), status: IncidentStatus.RESOLVED }] as unknown as Incident[],
+        incidents: [
+          { ...createMockIncident(), status: IncidentStatus.RESOLVED },
+        ] as unknown as Incident[],
         avgResponseTime: 30,
       };
 
@@ -291,4 +297,3 @@ describe('Analytics Calculations', () => {
     });
   });
 });
-
