@@ -50,7 +50,9 @@ const loggingMiddleware = t.middleware(async ({ path, type, next }) => {
   const result = await next();
   const duration = Date.now() - start;
 
-  if (process.env.NODE_ENV === 'development') {} ${path} - ${duration}ms`);
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`${path} - ${duration}ms`);
+  }
   }
 
   return result;
