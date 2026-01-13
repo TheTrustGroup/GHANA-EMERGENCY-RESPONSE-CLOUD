@@ -152,7 +152,8 @@ export async function sendPushNotification(
   });
 
   // In a real implementation, this would use the web-push library
-  // to send the notification to the subscription endpoint}
+  // to send the notification to the subscription endpoint
+}
 
 /**
  * Save push subscription to server
