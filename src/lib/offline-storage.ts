@@ -72,7 +72,8 @@ export async function processSyncQueue(): Promise<void> {
   for (const item of queue) {
     try {
       // Retry the original request
-      // This would be implemented based on the queued item type    } catch (error) {
+      // This would be implemented based on the queued item type
+    } catch (error) {
       console.error('Failed to process queued item:', error);
       // Keep in queue for retry
     }
