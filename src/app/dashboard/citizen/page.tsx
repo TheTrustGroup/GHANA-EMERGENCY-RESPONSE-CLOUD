@@ -24,19 +24,12 @@ import {
   ArrowRight,
   Menu,
   X,
-  Camera,
-  Send,
-  Star,
   TrendingUp,
   Activity,
   Zap,
-  Navigation,
-  Search,
   Settings,
   HelpCircle,
-  LogOut,
-  ChevronDown,
-  Circle
+  LogOut
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { haptics } from '@/lib/haptics';
