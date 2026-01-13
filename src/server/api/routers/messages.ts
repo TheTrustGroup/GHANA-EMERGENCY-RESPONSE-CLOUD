@@ -142,7 +142,7 @@ export const messagesRouter = createTRPCRouter({
           isSystemMessage: false,
         },
         include: {
-          sender: {
+          users: {
             select: {
               id: true,
               name: true,
@@ -156,7 +156,7 @@ export const messagesRouter = createTRPCRouter({
       // Create audit log
       await ctx.prisma.audit_logs.create({
         data: {
-        id: `audit-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+          id: `audit-${Date.now()}-${Math.random().toString(36).substring(7)}`,
           userId: ctx.session.user.id,
           action: 'message_sent',
           entity: 'Message',
@@ -170,7 +170,7 @@ export const messagesRouter = createTRPCRouter({
         where: { id: input.incidentId },
         include: {
           users: { select: { id: true } },
-          assignedAgency: {
+          agencies: {
             include: {
               users: { select: { id: true } },
             },
@@ -190,8 +190,8 @@ export const messagesRouter = createTRPCRouter({
         }
 
         // Add agency users
-        if (incidentWithParticipants.assignedAgency) {
-          incidentWithParticipants.assignedAgency.users.forEach((user: { id: string }) => {
+        if (incidentWithParticipants.agencies) {
+          incidentWithParticipants.agencies.users.forEach((user: { id: string }) => {
             if (user.id !== ctx.session.user.id) {
               participantIds.add(user.id);
             }
