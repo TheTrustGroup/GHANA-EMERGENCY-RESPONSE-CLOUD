@@ -183,7 +183,7 @@ export async function handleDispatchAssignment(assignmentData: {
     await createNotification(assignment.users.id, {
       type: NotificationType.DISPATCH_ASSIGNMENT,
       title: 'New Assignment',
-      message: `You have been assigned to: ${assignment.incident.title}`,
+      message: `You have been assigned to: ${assignment.incidents.title}`,
       relatedEntityType: 'dispatch',
       relatedEntityId: assignment.id,
       priority: assignmentData.priority >= 4 ? 'critical' : 'high',
