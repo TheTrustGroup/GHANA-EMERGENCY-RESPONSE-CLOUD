@@ -28,6 +28,13 @@ async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 10);
 }
 
+/**
+ * Generate unique ID
+ */
+function generateId(prefix: string): string {
+  return `${prefix}-${randomBytes(8).toString('hex')}`;
+}
+
 async function main(): Promise<void> {
   console.log('🌱 Starting database seed...');
 
@@ -44,11 +51,11 @@ async function main(): Promise<void> {
 
   // Create Agencies
   console.log('🏢 Creating agencies...');
-  const now = new Date();
+  const agencyNow = new Date();
   const agencies = await Promise.all([
     prisma.agencies.create({
       data: {
-        id: `agency-${randomBytes(8).toString('hex')}`,
+        id: generateId('agency'),
         name: 'NADMO Headquarters',
         type: AgencyType.NADMO,
         description: 'National Disaster Management Organization - Headquarters',
@@ -59,13 +66,13 @@ async function main(): Promise<void> {
         district: GHANA_LOCATIONS.accra.district,
         latitude: GHANA_LOCATIONS.accra.lat,
         longitude: GHANA_LOCATIONS.accra.lon,
-        updatedAt: now,
+        updatedAt: agencyNow,
         isActive: true,
       },
     }),
     prisma.agencies.create({
       data: {
-        id: `agency-${randomBytes(8).toString('hex')}`,
+        id: generateId('agency'),
         name: 'Ghana National Fire Service - Tema',
         type: AgencyType.FIRE_SERVICE,
         description: 'Fire Service Station in Tema',
@@ -76,13 +83,13 @@ async function main(): Promise<void> {
         district: GHANA_LOCATIONS.tema.district,
         latitude: GHANA_LOCATIONS.tema.lat,
         longitude: GHANA_LOCATIONS.tema.lon,
-        updatedAt: now,
+        updatedAt: agencyNow,
         isActive: true,
       },
     }),
     prisma.agencies.create({
       data: {
-        id: `agency-${randomBytes(8).toString('hex')}`,
+        id: generateId('agency'),
         name: 'Ghana Police Service - Kumasi',
         type: AgencyType.POLICE,
         description: 'Police Regional Command - Ashanti Region',
@@ -93,13 +100,13 @@ async function main(): Promise<void> {
         district: GHANA_LOCATIONS.kumasi.district,
         latitude: GHANA_LOCATIONS.kumasi.lat,
         longitude: GHANA_LOCATIONS.kumasi.lon,
-        updatedAt: now,
+        updatedAt: agencyNow,
         isActive: true,
       },
     }),
     prisma.agencies.create({
       data: {
-        id: `agency-${randomBytes(8).toString('hex')}`,
+        id: generateId('agency'),
         name: 'National Ambulance Service - Takoradi',
         type: AgencyType.AMBULANCE,
         description: 'Ambulance Service Station - Western Region',
@@ -110,13 +117,13 @@ async function main(): Promise<void> {
         district: GHANA_LOCATIONS.takoradi.district,
         latitude: GHANA_LOCATIONS.takoradi.lat,
         longitude: GHANA_LOCATIONS.takoradi.lon,
-        updatedAt: now,
+        updatedAt: agencyNow,
         isActive: true,
       },
     }),
     prisma.agencies.create({
       data: {
-        id: `agency-${randomBytes(8).toString('hex')}`,
+        id: generateId('agency'),
         name: 'SecureGuard Emergency Services',
         type: AgencyType.PRIVATE_RESPONDER,
         description: 'Private emergency response service in Accra',
@@ -127,7 +134,7 @@ async function main(): Promise<void> {
         district: GHANA_LOCATIONS.accra.district,
         latitude: GHANA_LOCATIONS.accra.lat + 0.05,
         longitude: GHANA_LOCATIONS.accra.lon + 0.02,
-        updatedAt: now,
+        updatedAt: agencyNow,
         isActive: true,
       },
     }),
@@ -137,8 +144,11 @@ async function main(): Promise<void> {
 
   // Create SYSTEM_ADMIN user
   console.log('👤 Creating system admin...');
+  const userNow = new Date();
   await prisma.users.create({
     data: {
+      id: generateId('user'),
+      updatedAt: userNow,
       email: 'admin@emergency.gov.gh',
       phone: formatGhanaPhone('0244000001'),
       name: 'System Administrator',
@@ -156,6 +166,9 @@ async function main(): Promise<void> {
   const agencyAdmins = await Promise.all([
     prisma.users.create({
       data: {
+        id: generateId('user'),
+        updatedAt: new Date(),
+      data: {
         email: 'nadmo.admin@emergency.gov.gh',
         phone: formatGhanaPhone('0244000002'),
         name: 'NADMO Administrator',
@@ -169,6 +182,9 @@ async function main(): Promise<void> {
     }),
     prisma.users.create({
       data: {
+        id: generateId('user'),
+        updatedAt: new Date(),
+      data: {
         email: 'fire.admin@emergency.gov.gh',
         phone: formatGhanaPhone('0244000003'),
         name: 'Fire Service Administrator',
@@ -181,6 +197,9 @@ async function main(): Promise<void> {
       },
     }),
     prisma.users.create({
+      data: {
+        id: generateId('user'),
+        updatedAt: new Date(),
       data: {
         email: 'police.admin@emergency.gov.gh',
         phone: formatGhanaPhone('0244000004'),
@@ -201,6 +220,9 @@ async function main(): Promise<void> {
   const dispatchers = await Promise.all([
     prisma.users.create({
       data: {
+        id: generateId('user'),
+        updatedAt: new Date(),
+      data: {
         email: 'dispatcher1@emergency.gov.gh',
         phone: formatGhanaPhone('0244000010'),
         name: 'John Dispatcher',
@@ -212,6 +234,9 @@ async function main(): Promise<void> {
       },
     }),
     prisma.users.create({
+      data: {
+        id: generateId('user'),
+        updatedAt: new Date(),
       data: {
         email: 'dispatcher2@emergency.gov.gh',
         phone: formatGhanaPhone('0244000011'),
@@ -232,6 +257,9 @@ async function main(): Promise<void> {
     // NADMO Responders
     prisma.users.create({
       data: {
+        id: generateId('user'),
+        updatedAt: new Date(),
+      data: {
         email: 'responder1@nadmo.gov.gh',
         phone: formatGhanaPhone('0244000101'),
         name: 'Kwame Asante',
@@ -243,6 +271,9 @@ async function main(): Promise<void> {
       },
     }),
     prisma.users.create({
+      data: {
+        id: generateId('user'),
+        updatedAt: new Date(),
       data: {
         email: 'responder2@nadmo.gov.gh',
         phone: formatGhanaPhone('0244000102'),
@@ -257,6 +288,9 @@ async function main(): Promise<void> {
     // Fire Service Responders
     prisma.users.create({
       data: {
+        id: generateId('user'),
+        updatedAt: new Date(),
+      data: {
         email: 'responder3@fire.gov.gh',
         phone: formatGhanaPhone('0244000201'),
         name: 'Kofi Firefighter',
@@ -268,6 +302,9 @@ async function main(): Promise<void> {
       },
     }),
     prisma.users.create({
+      data: {
+        id: generateId('user'),
+        updatedAt: new Date(),
       data: {
         email: 'responder4@fire.gov.gh',
         phone: formatGhanaPhone('0244000202'),
@@ -282,6 +319,9 @@ async function main(): Promise<void> {
     // Police Responders
     prisma.users.create({
       data: {
+        id: generateId('user'),
+        updatedAt: new Date(),
+      data: {
         email: 'responder5@police.gov.gh',
         phone: formatGhanaPhone('0244000301'),
         name: 'Yaw Policeman',
@@ -293,6 +333,9 @@ async function main(): Promise<void> {
       },
     }),
     prisma.users.create({
+      data: {
+        id: generateId('user'),
+        updatedAt: new Date(),
       data: {
         email: 'responder6@police.gov.gh',
         phone: formatGhanaPhone('0244000302'),
@@ -307,6 +350,9 @@ async function main(): Promise<void> {
     // Ambulance Responders
     prisma.users.create({
       data: {
+        id: generateId('user'),
+        updatedAt: new Date(),
+      data: {
         email: 'responder7@ambulance.gov.gh',
         phone: formatGhanaPhone('0244000401'),
         name: 'Kojo Paramedic',
@@ -318,6 +364,9 @@ async function main(): Promise<void> {
       },
     }),
     prisma.users.create({
+      data: {
+        id: generateId('user'),
+        updatedAt: new Date(),
       data: {
         email: 'responder8@ambulance.gov.gh',
         phone: formatGhanaPhone('0244000402'),
@@ -332,6 +381,9 @@ async function main(): Promise<void> {
     // Private Responders
     prisma.users.create({
       data: {
+        id: generateId('user'),
+        updatedAt: new Date(),
+      data: {
         email: 'responder9@secureguard.gh',
         phone: formatGhanaPhone('0244000501'),
         name: 'Nana Security',
@@ -343,6 +395,9 @@ async function main(): Promise<void> {
       },
     }),
     prisma.users.create({
+      data: {
+        id: generateId('user'),
+        updatedAt: new Date(),
       data: {
         email: 'responder10@secureguard.gh',
         phone: formatGhanaPhone('0244000502'),
@@ -362,6 +417,9 @@ async function main(): Promise<void> {
   const citizens = await Promise.all([
     prisma.users.create({
       data: {
+        id: generateId('user'),
+        updatedAt: new Date(),
+      data: {
         email: 'citizen1@example.com',
         phone: formatGhanaPhone('0245000001'),
         name: 'Kwabena Osei',
@@ -373,6 +431,9 @@ async function main(): Promise<void> {
       },
     }),
     prisma.users.create({
+      data: {
+        id: generateId('user'),
+        updatedAt: new Date(),
       data: {
         email: 'citizen2@example.com',
         phone: formatGhanaPhone('0245000002'),
@@ -386,6 +447,9 @@ async function main(): Promise<void> {
     }),
     prisma.users.create({
       data: {
+        id: generateId('user'),
+        updatedAt: new Date(),
+      data: {
         email: 'citizen3@example.com',
         phone: formatGhanaPhone('0245000003'),
         name: 'Kofi Appiah',
@@ -398,6 +462,9 @@ async function main(): Promise<void> {
     }),
     prisma.users.create({
       data: {
+        id: generateId('user'),
+        updatedAt: new Date(),
+      data: {
         email: 'citizen4@example.com',
         phone: formatGhanaPhone('0245000004'),
         name: 'Efua Boateng',
@@ -409,6 +476,9 @@ async function main(): Promise<void> {
       },
     }),
     prisma.users.create({
+      data: {
+        id: generateId('user'),
+        updatedAt: new Date(),
       data: {
         email: 'citizen5@example.com',
         phone: formatGhanaPhone('0245000005'),
@@ -481,7 +551,10 @@ async function main(): Promise<void> {
         },
       });
     } else {
-      await prisma.users.create({
+      await     prisma.users.create({
+      data: {
+        id: generateId('user'),
+        updatedAt: new Date(),
         data: {
           ...account,
           passwordHash: await hashPassword('Test1234'),
