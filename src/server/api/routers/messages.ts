@@ -135,6 +135,7 @@ export const messagesRouter = createTRPCRouter({
 
       const message = await ctx.prisma.messages.create({
         data: {
+          id: `message-${Date.now()}-${Math.random().toString(36).substring(7)}`,
           incidentId: input.incidentId,
           senderId: ctx.session.user.id,
           content: input.content,
@@ -215,7 +216,7 @@ export const messagesRouter = createTRPCRouter({
           await createNotification(userId, {
             type: NotificationType.MESSAGE_RECEIVED,
             title: 'New Message',
-            message: `${message.sender?.name || 'Someone'}: ${input.content.substring(0, 50)}${input.content.length > 50 ? '...' : ''}`,
+            message: `${message.users?.name || 'Someone'}: ${input.content.substring(0, 50)}${input.content.length > 50 ? '...' : ''}`,
             relatedEntityType: 'message',
             relatedEntityId: message.id,
             priority: input.isUrgent ? 'high' : 'normal',
@@ -226,8 +227,8 @@ export const messagesRouter = createTRPCRouter({
       return {
         id: message.id,
         content: message.content,
-        senderId: message.senderId,
-        sender: message.sender,
+        senderId: message.usersId,
+        sender: message.users,
         isSystemMessage: message.isSystemMessage,
         createdAt: message.createdAt,
       };
