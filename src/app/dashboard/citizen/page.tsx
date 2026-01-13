@@ -366,11 +366,12 @@ export default function CitizenDashboardApp() {
 // ============================================
 
 function StatCard({ icon: Icon, label, value, color, pulse, delay }: any) {
-  const colors = {
+  const colorMap: Record<string, { bg: string; light: string; text: string }> = {
     blue: { bg: 'from-blue-500 to-blue-600', light: 'bg-blue-50', text: 'text-blue-600' },
     orange: { bg: 'from-orange-500 to-orange-600', light: 'bg-orange-50', text: 'text-orange-600' },
     green: { bg: 'from-green-500 to-green-600', light: 'bg-green-50', text: 'text-green-600' },
-  }[color];
+  };
+  const colors = colorMap[color] || colorMap.blue;
 
   return (
     <motion.div
