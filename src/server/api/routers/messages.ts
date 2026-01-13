@@ -23,7 +23,7 @@ export const messagesRouter = createTRPCRouter({
         where: { id: input.incidentId },
         select: {
           id: true,
-          usersId: true,
+          reportedById: true,
           assignedAgencyId: true,
         },
       });
@@ -44,7 +44,7 @@ export const messagesRouter = createTRPCRouter({
         (ctx.session.user.role === 'AGENCY_ADMIN' &&
           incident.assignedAgencyId === ctx.session.user.agencyId) ||
         // Citizens can view incidents they reported
-        (ctx.session.user.role === 'CITIZEN' && incident.usersId === ctx.session.user.id);
+        (ctx.session.user.role === 'CITIZEN' && incident.reportedById === ctx.session.user.id);
 
       if (!canAccess) {
         throw new TRPCError({
@@ -106,7 +106,7 @@ export const messagesRouter = createTRPCRouter({
         where: { id: input.incidentId },
         select: {
           id: true,
-          usersId: true,
+          reportedById: true,
           assignedAgencyId: true,
         },
       });
@@ -124,7 +124,7 @@ export const messagesRouter = createTRPCRouter({
         ctx.session.user.role === 'DISPATCHER' ||
         (ctx.session.user.role === 'AGENCY_ADMIN' &&
           incident.assignedAgencyId === ctx.session.user.agencyId) ||
-        (ctx.session.user.role === 'CITIZEN' && incident.usersId === ctx.session.user.id);
+        (ctx.session.user.role === 'CITIZEN' && incident.reportedById === ctx.session.user.id);
 
       if (!canAccess) {
         throw new TRPCError({
@@ -182,10 +182,10 @@ export const messagesRouter = createTRPCRouter({
 
         // Add reporter
         if (
-          incidentWithParticipants.usersId &&
-          incidentWithParticipants.usersId !== ctx.session.user.id
+          incidentWithParticipants.reportedById &&
+          incidentWithParticipants.reportedById !== ctx.session.user.id
         ) {
-          participantIds.add(incidentWithParticipants.usersId);
+          participantIds.add(incidentWithParticipants.reportedById);
         }
 
         // Add agency users
@@ -302,7 +302,7 @@ export const messagesRouter = createTRPCRouter({
       const participants = await ctx.prisma.users.findMany({
         where: {
           OR: [
-            ...(incident.usersId ? [{ id: incident.usersId }] : []),
+            ...(incident.reportedById ? [{ id: incident.reportedById }] : []),
             { id: { in: Array.from(senderIds) } },
             ...(incident.assignedAgency ? [{ agencyId: incident.assignedAgencyId }] : []),
           ],
