@@ -227,7 +227,7 @@ export const messagesRouter = createTRPCRouter({
       return {
         id: message.id,
         content: message.content,
-        senderId: message.usersId,
+        senderId: message.senderId,
         sender: message.users,
         isSystemMessage: message.isSystemMessage,
         createdAt: message.createdAt,
