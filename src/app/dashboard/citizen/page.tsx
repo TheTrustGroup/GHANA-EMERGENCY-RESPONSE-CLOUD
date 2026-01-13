@@ -173,7 +173,7 @@ export default function CitizenDashboardApp() {
                 </div>
                 <h2 className="mb-2 text-2xl font-black text-white">Need Emergency Help?</h2>
                 <p className="text-sm text-red-100">
-                  We're here for you. Help arrives in ~8 minutes
+                  We&apos;re here for you. Help arrives in ~8 minutes
                 </p>
               </div>
               <Shield className="h-12 w-12 text-white/30" />
@@ -566,7 +566,7 @@ function EmptyState({ router }: any) {
 
       <h3 className="mb-2 text-xl font-black text-gray-900">All Clear! 🎉</h3>
       <p className="mb-6 leading-relaxed text-gray-600">
-        You haven't reported any emergencies yet.
+        You haven&apos;t reported any emergencies yet.
         <br />
         We hope it stays that way!
       </p>

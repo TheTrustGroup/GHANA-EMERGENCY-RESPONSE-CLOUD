@@ -10,7 +10,7 @@ import {
   calculateUtilizationRate,
 } from '../analytics';
 import { IncidentStatus } from '@prisma/client';
-import type { incidents } from '@prisma/client';
+import type { incidents as Incident } from '@prisma/client';
 import { createMockIncident } from '@/test/factories';
 
 describe('Analytics Calculations', () => {
