@@ -3,7 +3,8 @@
  * Calculations and data processing for analytics
  */
 
-import { Incident, IncidentStatus } from '@prisma/client';
+import { IncidentStatus } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
 
 export interface ResponseTimeMetrics {
   total: number;
@@ -51,7 +52,7 @@ export function calculateResponseTime(incident: {
  * Calculate resolution rate
  * Returns percentage of incidents that were resolved
  */
-export function calculateResolutionRate(incidents: Incident[]): number {
+export function calculateResolutionRate(incidents: Prisma.incidentsGetPayload<{}>[]): number {
   if (incidents.length === 0) return 0;
   
   const resolved = incidents.filter(
@@ -69,7 +70,7 @@ export function calculateAgencyScore(
   agency: {
     id: string;
     name: string;
-    incidents: Incident[];
+    incidents: Prisma.incidentsGetPayload<{}>[];
     avgResponseTime: number;
   }
 ): AgencyScore {
@@ -301,7 +302,7 @@ export function calculateResponseTimeDistribution(
  * Group incidents by time period
  */
 export function groupByTimePeriod(
-  incidents: Incident[],
+  incidents: Prisma.incidentsGetPayload<{}>[],
   period: 'hour' | 'day' | 'week' | 'month'
 ): Map<string, number> {
   const grouped = new Map<string, number>();

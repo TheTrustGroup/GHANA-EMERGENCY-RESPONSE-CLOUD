@@ -9,7 +9,8 @@ import {
   calculateAgencyScore,
   calculateUtilizationRate,
 } from '../analytics';
-import { IncidentStatus, Incident } from '@prisma/client';
+import { IncidentStatus } from '@prisma/client';
+import type { incidents } from '@prisma/client';
 import { createMockIncident } from '@/test/factories';
 
 describe('Analytics Calculations', () => {
