@@ -98,7 +98,9 @@ export async function sendSMS(phoneNumber: string, message: string): Promise<voi
       throw new Error(`SMS delivery failed: ${result.SMSMessageData?.Recipients?.[0]?.statusCode}`);
     }
 
-    // Log success (result is used in the condition above)  } catch (error) {
+    // Log success
+    console.log(`SMS sent successfully to ${formattedPhone}`);
+  } catch (error) {
     console.error('Failed to send SMS:', error);
     throw error;
   }
