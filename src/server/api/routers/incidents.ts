@@ -630,7 +630,7 @@ export const incidentsRouter = createTRPCRouter({
       const updates = await ctx.prisma.incident_updates.findMany({
         where: { incidentId: input.id },
         include: {
-          user: {
+          users: {
             select: { id: true, name: true, role: true },
           },
         },
@@ -695,7 +695,7 @@ export const incidentsRouter = createTRPCRouter({
             input.mediaUrls.length > 0 ? ({ mediaUrls: input.mediaUrls } as any) : undefined,
         },
         include: {
-          user: {
+          users: {
             select: { id: true, name: true, role: true },
           },
         },
