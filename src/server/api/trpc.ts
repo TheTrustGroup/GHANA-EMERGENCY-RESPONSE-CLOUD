@@ -53,7 +53,6 @@ const loggingMiddleware = t.middleware(async ({ path, type, next }) => {
   if (process.env.NODE_ENV === 'development') {
     console.log(`${path} - ${duration}ms`);
   }
-  }
 
   return result;
 });
