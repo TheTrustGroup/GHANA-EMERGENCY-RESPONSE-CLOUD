@@ -270,7 +270,7 @@ export const incidentsRouter = createTRPCRouter({
           },
           messages: {
             include: {
-              sender: {
+              users: {
                 select: { id: true, name: true },
               },
             },
