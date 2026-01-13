@@ -102,7 +102,7 @@ export const authRouter = createTRPCRouter({
       }
 
       // Generate token
-      const resetToken = crypto.randomBytes(32).toString('hex');
+      const _resetToken = crypto.randomBytes(32).toString('hex');
       // TODO: Store token in database
 
       // TODO: Send email

@@ -69,7 +69,7 @@ export async function processSyncQueue(): Promise<void> {
   }
 
   // Process each item in queue
-  for (const item of queue) {
+  for (const _item of queue) {
     try {
       // Retry the original request
       // This would be implemented based on the queued item type

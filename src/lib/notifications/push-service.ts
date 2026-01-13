@@ -124,14 +124,16 @@ export async function unsubscribeFromPush(userId: string): Promise<void> {
  * Send push notification (server-side)
  */
 export async function sendPushNotification(
-  subscription: PushSubscription,
+  _subscription: PushSubscription,
   notification: PushNotificationData
 ): Promise<void> {
   // This would typically be called from the server
   // For client-side, we use the Web Push library
   // This is a placeholder - actual implementation would use web-push library on server
 
-  const payload = JSON.stringify({
+  // Placeholder - payload would be used with web-push library
+  // @ts-ignore - Placeholder implementation
+  const _payload = JSON.stringify({
     title: notification.title,
     body: notification.body,
     icon: notification.icon || '/favicon.ico',

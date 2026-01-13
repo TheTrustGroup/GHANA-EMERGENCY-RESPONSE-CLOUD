@@ -12,6 +12,46 @@ import {
 import { createNotification, NotificationType } from '@/lib/notifications/notification-service';
 
 // ============================================
+// HELPER FUNCTIONS
+// ============================================
+
+async function findNearbyAgencies(latitude: number, longitude: number, radiusKm: number) {
+  // Get all active agencies
+  const agencies = await prisma.agencies.findMany({
+    where: { isActive: true },
+  });
+
+  // Calculate distances (Haversine formula)
+  const nearby = agencies
+    .map((agency) => {
+      if (!agency.latitude || !agency.longitude) return null;
+
+      const distance = calculateDistance(latitude, longitude, agency.latitude, agency.longitude);
+
+      return { ...agency, distance };
+    })
+    .filter((agency) => agency !== null && agency.distance <= radiusKm)
+    .sort((a, b) => a!.distance - b!.distance);
+
+  return nearby as any[];
+}
+
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Earth's radius in km
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function toRad(degrees: number): number {
+  return degrees * (Math.PI / 180);
+}
+
+// ============================================
 // COMPLETE INCIDENT WORKFLOW ORCHESTRATION
 // ============================================
 
@@ -97,7 +137,8 @@ export async function handleNewIncident(incidentData: {
 
   // 5. If CRITICAL, send SMS to on-duty responders
   if (incident.severity === 'CRITICAL') {
-    // TODO: Implement SMS sending  }
+    // TODO: Implement SMS sending
+  }
 
   // 6. Create audit log
   if (incidentData.reportedById) {
@@ -123,7 +164,7 @@ export async function handleDispatchAssignment(assignmentData: {
   priority: number;
   dispatchNotes?: string;
   dispatcherId: string;
-}) {
+}): Promise<any> {
   // 1. Verify incident and agency exist
   const [incident, agency] = await Promise.all([
     prisma.incidents.findUnique({ where: { id: assignmentData.incidentId } }),
@@ -189,7 +230,8 @@ export async function handleDispatchAssignment(assignmentData: {
       priority: assignmentData.priority >= 4 ? 'critical' : 'high',
     });
 
-    // TODO: Send SMS  }
+    // TODO: Send SMS
+  }
 
   // 6. Broadcast to all relevant channels
   await broadcastDispatchAssignment({
@@ -231,13 +273,15 @@ export async function handleDispatchAssignment(assignmentData: {
   return assignment;
 }
 
-export async function handleStatusUpdate(updateData: {
+// Utility function for future use - intentionally unused for now
+// @ts-ignore
+async function handleStatusUpdate(updateData: {
   assignmentId: string;
   status: 'ACCEPTED' | 'EN_ROUTE' | 'ARRIVED' | 'COMPLETED';
   latitude?: number;
   longitude?: number;
   userId: string;
-}) {
+}): Promise<any> {
   // 1. Get assignment
   const assignment = await prisma.dispatch_assignments.findUnique({
     where: { id: updateData.assignmentId },
@@ -345,44 +389,4 @@ export async function handleStatusUpdate(updateData: {
   }
 
   return updated;
-}
-
-// ============================================
-// HELPER FUNCTIONS
-// ============================================
-
-async function findNearbyAgencies(latitude: number, longitude: number, radiusKm: number) {
-  // Get all active agencies
-  const agencies = await prisma.agencies.findMany({
-    where: { isActive: true },
-  });
-
-  // Calculate distances (Haversine formula)
-  const nearby = agencies
-    .map((agency) => {
-      if (!agency.latitude || !agency.longitude) return null;
-
-      const distance = calculateDistance(latitude, longitude, agency.latitude, agency.longitude);
-
-      return { ...agency, distance };
-    })
-    .filter((agency) => agency !== null && agency.distance <= radiusKm)
-    .sort((a, b) => a!.distance - b!.distance);
-
-  return nearby as any[];
-}
-
-function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371; // Earth's radius in km
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
-
-function toRad(degrees: number): number {
-  return degrees * (Math.PI / 180);
 }

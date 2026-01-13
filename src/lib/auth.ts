@@ -49,9 +49,11 @@ export const authOptions: NextAuthOptions = {
           let normalizedIdentifier: string;
           if (isEmail) {
             // For email, lowercase it
-            normalizedIdentifier = rawIdentifier.toLowerCase();          } else {
+            normalizedIdentifier = rawIdentifier.toLowerCase();
+          } else {
             // For phone, format it but preserve original for rate limiting
-            normalizedIdentifier = formatGhanaPhone(rawIdentifier);          }
+            normalizedIdentifier = formatGhanaPhone(rawIdentifier);
+          }
 
           // Validate credentials
           const user = await validateCredentials(normalizedIdentifier, credentials.password);
@@ -221,12 +223,12 @@ export async function validateCredentials(
     // Normalize identifier - check if it's email or phone first
     const isEmail = identifier.includes('@');
 
-        // For emails, lowercase. For phones, use as-is (already formatted)
-        const normalizedIdentifier = isEmail ? identifier.toLowerCase().trim() : identifier.trim();
+    // For emails, lowercase. For phones, use as-is (already formatted)
+    const normalizedIdentifier = isEmail ? identifier.toLowerCase().trim() : identifier.trim();
 
-        console.log(
-          `[VALIDATE] Looking up user with identifier: ${normalizedIdentifier} (isEmail: ${isEmail}, original: ${identifier})`
-        );
+    console.log(
+      `[VALIDATE] Looking up user with identifier: ${normalizedIdentifier} (isEmail: ${isEmail}, original: ${identifier})`
+    );
 
     // Try to find user by email (case-insensitive) or phone
     const user = await prisma.users.findFirst({

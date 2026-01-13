@@ -135,7 +135,7 @@ function generateHighlights(generatedReport: GeneratedReport): string[] {
 /**
  * Send email (placeholder - would integrate with email service)
  */
-async function sendEmail(data: {
+async function sendEmail(_data: {
   to: string;
   subject: string;
   body: string;

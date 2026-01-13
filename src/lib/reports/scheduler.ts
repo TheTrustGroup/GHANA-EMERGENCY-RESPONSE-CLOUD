@@ -136,16 +136,18 @@ async function executeReport(reportConfig: ReportConfig, _executionId: string): 
  * Send notifications to recipients
  */
 async function sendReportNotifications(
-  reportConfig: ReportConfig,
-  generatedReport: any
+  _reportConfig: ReportConfig,
+  _generatedReport: any
 ): Promise<void> {
   // This would integrate with the email service
-  // For now, just log}
+  // For now, just log
+}
 
 /**
  * Convert timezone-aware time to UTC
  */
-export function convertToUTC(
+// @ts-ignore - Placeholder function
+function convertToUTC(
   _time: string,
   _timezone: string,
   date: Date = new Date()
