@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
 
     // Parse body
     const body = await request.json();
-    const { event, properties } = body;
+    const { event } = body;
 
     // Validate
     if (!event || typeof event !== 'string') {
