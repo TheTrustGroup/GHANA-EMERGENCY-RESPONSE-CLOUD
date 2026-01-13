@@ -112,9 +112,11 @@ export const incidentsRouter = createTRPCRouter({
 
     const incident = await ctx.prisma.incidents.create({
       data: {
+        id: `incident-${Date.now()}-${Math.random().toString(36).substring(7)}`,
         ...incidentData,
         region,
         district,
+        updatedAt: new Date(),
         reportedById: ctx.session.user.id,
         status: IncidentStatus.REPORTED,
       },
