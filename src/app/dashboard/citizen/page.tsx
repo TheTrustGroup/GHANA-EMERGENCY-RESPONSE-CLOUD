@@ -46,11 +46,6 @@ export default function CitizenDashboardApp() {
     sortOrder: 'desc',
   }, { enabled: !!session?.user?.id, refetchInterval: 30000 });
 
-  const { data: stats } = trpc.users.getMyStats.useQuery(
-    undefined,
-    { enabled: !!session?.user?.id }
-  );
-
   const { data: notifications } = trpc.notifications.getMyNotifications.useQuery(
     { limit: 10, unreadOnly: false },
     { enabled: !!session?.user?.id }
