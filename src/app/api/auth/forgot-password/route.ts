@@ -35,8 +35,7 @@ export async function POST(request: Request) {
     }
 
     // Generate reset token (for future email implementation)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const _resetToken = crypto.randomBytes(32).toString('hex');
+    // const resetToken = crypto.randomBytes(32).toString('hex');
     // Token expiry: 1 hour (stored in database when implementing token table)
 
     // Store reset token (you'd typically store this in a separate table)

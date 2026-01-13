@@ -42,8 +42,7 @@ export async function POST(request: Request) {
     }
 
     // Generate verification token (for future email implementation)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const _verificationToken = crypto.randomBytes(32).toString('hex');
+    // const verificationToken = crypto.randomBytes(32).toString('hex');
     // Token expiry: 24 hours (stored in database when implementing token table)
 
     // TODO: Store verification token in database
