@@ -45,7 +45,7 @@ function SignInContent() {
     try {
       // Normalize identifier - lowercase email, keep phone as-is (server will format it)
       let identifier = data.identifier.trim();
-      
+
       // Only lowercase if it's an email (contains @)
       if (!usePhone && identifier.includes('@')) {
         identifier = identifier.toLowerCase();
@@ -59,9 +59,7 @@ function SignInContent() {
 
       if (result?.error) {
         setError(
-          result.error === 'CredentialsSignin'
-            ? 'Invalid email/phone or password'
-            : result.error
+          result.error === 'CredentialsSignin' ? 'Invalid email/phone or password' : result.error
         );
         setIsLoading(false);
         return;
@@ -69,8 +67,8 @@ function SignInContent() {
 
       if (result?.ok) {
         // Wait a bit for session to be set
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
         // Get user role from session to determine redirect
         try {
           const response = await fetch('/api/auth/session');
@@ -103,7 +101,7 @@ function SignInContent() {
           // Check for callback URL
           const callbackUrl = searchParams.get('callbackUrl');
           const finalPath = callbackUrl || redirectPath;
-          
+
           // Use window.location for more reliable redirect
           window.location.href = finalPath;
         } catch (sessionError) {
@@ -121,16 +119,16 @@ function SignInContent() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 p-4 sm:p-6">
-      <Card className="w-full max-w-md premium-shadow">
-        <CardHeader className="space-y-2 text-center px-4 sm:px-6 pt-6 sm:pt-8">
-          <CardTitle className="text-2xl sm:text-3xl md:text-4xl font-bold text-blue-900 leading-tight">
+      <Card className="premium-shadow w-full max-w-md">
+        <CardHeader className="space-y-2 px-4 pt-6 text-center sm:px-6 sm:pt-8">
+          <CardTitle className="text-2xl font-bold leading-tight text-blue-900 sm:text-3xl md:text-4xl">
             Ghana Emergency Response
           </CardTitle>
           <CardDescription className="text-sm sm:text-base">
             Sign in to your account
           </CardDescription>
         </CardHeader>
-        <CardContent className="px-4 sm:px-6 pb-6 sm:pb-8">
+        <CardContent className="px-4 pb-6 sm:px-6 sm:pb-8">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5">
             {error && (
               <Alert variant="destructive">
@@ -140,14 +138,14 @@ function SignInContent() {
             )}
 
             <div className="space-y-2">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <Label htmlFor="identifier" className="text-sm sm:text-base">
                   {usePhone ? 'Phone Number' : 'Email'}
                 </Label>
                 <button
                   type="button"
                   onClick={() => setUsePhone(!usePhone)}
-                  className="text-xs sm:text-sm text-blue-600 hover:underline text-left sm:text-right"
+                  className="text-left text-xs text-blue-600 hover:underline sm:text-right sm:text-sm"
                 >
                   Use {usePhone ? 'Email' : 'Phone'} instead
                 </button>
@@ -155,28 +153,24 @@ function SignInContent() {
               <Input
                 id="identifier"
                 type={usePhone ? 'tel' : 'email'}
-                placeholder={
-                  usePhone
-                    ? '+233XXXXXXXXX or 024XXXXXXXX'
-                    : 'email@example.com'
-                }
+                placeholder={usePhone ? '+233XXXXXXXXX or 024XXXXXXXX' : 'email@example.com'}
                 className="text-sm sm:text-base"
                 {...register('identifier')}
                 disabled={isLoading}
               />
               {errors.identifier && (
-                <p className="text-xs sm:text-sm text-destructive">
-                  {errors.identifier.message}
-                </p>
+                <p className="text-xs text-destructive sm:text-sm">{errors.identifier.message}</p>
               )}
             </div>
 
             <div className="space-y-2">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <Label htmlFor="password" className="text-sm sm:text-base">Password</Label>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <Label htmlFor="password" className="text-sm sm:text-base">
+                  Password
+                </Label>
                 <Link
                   href="/auth/forgot-password"
-                  className="text-xs sm:text-sm text-blue-600 hover:underline text-left sm:text-right"
+                  className="text-left text-xs text-blue-600 hover:underline sm:text-right sm:text-sm"
                 >
                   Forgot password?
                 </Link>
@@ -190,29 +184,20 @@ function SignInContent() {
                 disabled={isLoading}
               />
               {errors.password && (
-                <p className="text-xs sm:text-sm text-destructive">
-                  {errors.password.message}
-                </p>
+                <p className="text-xs text-destructive sm:text-sm">{errors.password.message}</p>
               )}
             </div>
 
             <div className="flex items-center space-x-2">
-              <Checkbox
-                id="rememberMe"
-                {...register('rememberMe')}
-                disabled={isLoading}
-              />
-              <Label
-                htmlFor="rememberMe"
-                className="text-xs sm:text-sm font-normal cursor-pointer"
-              >
+              <Checkbox id="rememberMe" {...register('rememberMe')} disabled={isLoading} />
+              <Label htmlFor="rememberMe" className="cursor-pointer text-xs font-normal sm:text-sm">
                 Remember me
               </Label>
             </div>
 
             <Button
               type="submit"
-              className="w-full text-sm sm:text-base py-2 sm:py-2.5"
+              className="w-full py-2 text-sm sm:py-2.5 sm:text-base"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -226,13 +211,8 @@ function SignInContent() {
             </Button>
 
             <div className="text-center text-xs sm:text-sm">
-              <span className="text-muted-foreground">
-                Don&apos;t have an account?{' '}
-              </span>
-              <Link
-                href="/auth/register"
-                className="text-blue-600 hover:underline font-medium"
-              >
+              <span className="text-muted-foreground">Don&apos;t have an account? </span>
+              <Link href="/auth/register" className="font-medium text-blue-600 hover:underline">
                 Register here
               </Link>
             </div>
@@ -245,14 +225,16 @@ function SignInContent() {
 
 export default function SignInPage() {
   return (
-    <Suspense fallback={
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="text-center">
+            <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600"></div>
+            <p className="text-gray-600">Loading...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <SignInContent />
     </Suspense>
   );

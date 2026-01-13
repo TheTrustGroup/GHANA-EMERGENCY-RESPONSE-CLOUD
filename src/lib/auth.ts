@@ -38,15 +38,13 @@ export const authOptions: NextAuthOptions = {
         // Check rate limiting (but don't block on first few attempts)
         if (checkRateLimit(rateLimitKey, 10, 15 * 60 * 1000)) {
           console.error(`[AUTH] Rate limit exceeded for: ${rawIdentifier}`);
-          throw new Error(
-            'Too many login attempts. Please try again in 15 minutes.'
-          );
+          throw new Error('Too many login attempts. Please try again in 15 minutes.');
         }
 
         try {
           // Determine if identifier is email or phone
           const isEmail = rawIdentifier.includes('@');
-          
+
           // Normalize based on type
           let normalizedIdentifier: string;
           if (isEmail) {
@@ -60,10 +58,7 @@ export const authOptions: NextAuthOptions = {
           }
 
           // Validate credentials
-          const user = await validateCredentials(
-            normalizedIdentifier,
-            credentials.password
-          );
+          const user = await validateCredentials(normalizedIdentifier, credentials.password);
 
           if (!user) {
             console.error(`[AUTH] Invalid credentials for: ${rawIdentifier}`);
@@ -187,9 +182,7 @@ export async function requireRole(...roles: UserRole[]) {
   const session = await requireAuth();
 
   if (!roles.includes(session.user.role)) {
-    throw new Error(
-      `Forbidden: Requires one of the following roles: ${roles.join(', ')}`
-    );
+    throw new Error(`Forbidden: Requires one of the following roles: ${roles.join(', ')}`);
   }
 
   return session;
@@ -210,10 +203,7 @@ export async function hashPassword(password: string): Promise<string> {
 /**
  * Verify password against hash
  */
-export async function verifyPassword(
-  password: string,
-  hash: string
-): Promise<boolean> {
+export async function verifyPassword(password: string, hash: string): Promise<boolean> {
   return bcrypt.compare(password, hash);
 }
 
@@ -233,56 +223,74 @@ export async function validateCredentials(
   isActive: boolean;
 } | null> {
   try {
-    // Normalize identifier - always lowercase for email comparison
-    // Phone numbers are already formatted by the authorize function
-    const normalizedIdentifier = identifier.toLowerCase().trim();
+    // Normalize identifier - check if it's email or phone first
+    const isEmail = identifier.includes('@');
     
-    // Check if identifier looks like an email or phone
-    const isEmail = normalizedIdentifier.includes('@');
-    
-    console.log(`[VALIDATE] Looking up user with identifier: ${normalizedIdentifier} (isEmail: ${isEmail})`);
-    
+    // For emails, lowercase. For phones, use as-is (already formatted)
+    const normalizedIdentifier = isEmail 
+      ? identifier.toLowerCase().trim()
+      : identifier.trim();
+
+    console.log(
+      `[VALIDATE] Looking up user with identifier: ${normalizedIdentifier} (isEmail: ${isEmail}, original: ${identifier})`
+    );
+
     // Try to find user by email (case-insensitive) or phone
-    // Use both email and phone in OR to handle edge cases
     const user = await prisma.user.findFirst({
       where: {
-        OR: [
-          // Always try email match (case-insensitive via lowercase)
-          { email: normalizedIdentifier },
-          // Also try phone match (in case identifier wasn't normalized)
-          { phone: identifier },
-          // Try phone with normalized identifier too
-          ...(isEmail ? [] : [{ phone: normalizedIdentifier }]),
-        ],
+        OR: isEmail
+          ? [
+              // For email, use exact lowercase match
+              { email: normalizedIdentifier },
+            ]
+          : [
+              // For phone, try exact match (already formatted)
+              { phone: identifier },
+              // Also try with normalized (in case it wasn't formatted)
+              { phone: normalizedIdentifier },
+            ],
         isActive: true,
       },
     });
 
     if (!user) {
-      console.error(`[VALIDATE] User not found: ${normalizedIdentifier}`);
+      console.error(`[VALIDATE] User not found: ${normalizedIdentifier} (type: ${isEmail ? 'email' : 'phone'})`);
+      // Try alternative lookup for debugging
+      if (isEmail) {
+        const allUsers = await prisma.user.findMany({
+          where: { email: { contains: normalizedIdentifier.split('@')[0] } },
+          select: { email: true, isActive: true },
+          take: 3,
+        });
+        console.error(`[VALIDATE] Similar emails found: ${allUsers.map(u => u.email).join(', ')}`);
+      }
       return null;
     }
 
-    console.log(`[VALIDATE] User found: ${user.email} (Active: ${user.isActive})`);
+    console.log(`[VALIDATE] User found: ${user.email} (Active: ${user.isActive}, Role: ${user.role})`);
 
     // Verify password
     const isValid = await verifyPassword(password, user.passwordHash);
 
     if (!isValid) {
       console.error(`[VALIDATE] Invalid password for: ${user.email}`);
+      // Don't log the actual password, but log that comparison failed
+      console.error(`[VALIDATE] Password hash exists: ${!!user.passwordHash}`);
       return null;
     }
 
     console.log(`[VALIDATE] Password verified for: ${user.email}`);
 
     // Update last login
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { lastLoginAt: new Date() },
-    }).catch(err => {
-      // Don't fail login if last login update fails
-      console.error('[VALIDATE] Failed to update last login:', err);
-    });
+    await prisma.user
+      .update({
+        where: { id: user.id },
+        data: { lastLoginAt: new Date() },
+      })
+      .catch((err) => {
+        // Don't fail login if last login update fails
+        console.error('[VALIDATE] Failed to update last login:', err);
+      });
 
     return {
       id: user.id,
@@ -297,4 +305,3 @@ export async function validateCredentials(
     return null;
   }
 }
-
