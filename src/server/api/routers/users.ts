@@ -11,7 +11,7 @@ import { formatGhanaPhone } from '@/server/db/utils';
 
 export const usersRouter = createTRPCRouter({
   getProfile: protectedProcedure.query(async ({ ctx }) => {
-    const user = await ctx.prisma.user.findUnique({
+    const user = await ctx.prisma.users.findUnique({
       where: { id: ctx.session.user.id },
       include: {
         agency: {
@@ -47,7 +47,7 @@ export const usersRouter = createTRPCRouter({
       if (input.latitude !== undefined) updateData.latitude = input.latitude;
       if (input.longitude !== undefined) updateData.longitude = input.longitude;
 
-      const updated = await ctx.prisma.user.update({
+      const updated = await ctx.prisma.users.update({
         where: { id: ctx.session.user.id },
         data: updateData,
         select: {
@@ -88,7 +88,7 @@ export const usersRouter = createTRPCRouter({
         });
       }
 
-      const users = await ctx.prisma.user.findMany({
+      const users = await ctx.prisma.users.findMany({
         where: { agencyId: input.agencyId },
         select: {
           id: true,
@@ -113,7 +113,7 @@ export const usersRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const user = await ctx.prisma.user.findUnique({
+      const user = await ctx.prisma.users.findUnique({
         where: { id: input.userId },
       });
 
@@ -124,7 +124,7 @@ export const usersRouter = createTRPCRouter({
         });
       }
 
-      const updated = await ctx.prisma.user.update({
+      const updated = await ctx.prisma.users.update({
         where: { id: input.userId },
         data: { role: input.role },
       });
@@ -146,7 +146,7 @@ export const usersRouter = createTRPCRouter({
   deactivate: adminProcedure
     .input(z.object({ userId: z.string().cuid() }))
     .mutation(async ({ input, ctx }) => {
-      const user = await ctx.prisma.user.findUnique({
+      const user = await ctx.prisma.users.findUnique({
         where: { id: input.userId },
       });
 
@@ -164,7 +164,7 @@ export const usersRouter = createTRPCRouter({
         });
       }
 
-      const updated = await ctx.prisma.user.update({
+      const updated = await ctx.prisma.users.update({
         where: { id: input.userId },
         data: { isActive: false },
       });
@@ -183,7 +183,7 @@ export const usersRouter = createTRPCRouter({
     }),
 
   getAll: adminProcedure.query(async ({ ctx }) => {
-    const users = await ctx.prisma.user.findMany({
+    const users = await ctx.prisma.users.findMany({
       select: {
         id: true,
         name: true,

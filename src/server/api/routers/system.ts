@@ -139,7 +139,7 @@ export const systemRouter = createTRPCRouter({
       });
 
       // Get active responders
-      const activeResponders = await ctx.prisma.user.count({
+      const activeResponders = await ctx.prisma.users.count({
         where: {
           role: 'RESPONDER',
           status: {
@@ -148,7 +148,7 @@ export const systemRouter = createTRPCRouter({
         },
       });
 
-      const totalResponders = await ctx.prisma.user.count({
+      const totalResponders = await ctx.prisma.users.count({
         where: {
           role: 'RESPONDER',
         },

@@ -234,7 +234,7 @@ export async function validateCredentials(
     );
 
     // Try to find user by email (case-insensitive) or phone
-    const user = await prisma.user.findFirst({
+    const user = await prisma.users.findFirst({
       where: {
         OR: isEmail
           ? [
@@ -257,7 +257,7 @@ export async function validateCredentials(
       );
       // Try alternative lookup for debugging
       if (isEmail) {
-        const allUsers = await prisma.user.findMany({
+        const allUsers = await prisma.users.findMany({
           where: { email: { contains: normalizedIdentifier.split('@')[0] } },
           select: { email: true, isActive: true },
           take: 3,
@@ -286,7 +286,7 @@ export async function validateCredentials(
     console.log(`[VALIDATE] Password verified for: ${user.email}`);
 
     // Update last login
-    await prisma.user
+    await prisma.users
       .update({
         where: { id: user.id },
         data: { lastLoginAt: new Date() },

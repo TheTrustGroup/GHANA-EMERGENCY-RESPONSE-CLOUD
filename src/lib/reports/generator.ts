@@ -82,7 +82,7 @@ export async function generateReport(
           type: true,
         },
       }),
-      prisma.user.findMany({
+      prisma.users.findMany({
         where: {
           role: 'RESPONDER',
           isActive: true,

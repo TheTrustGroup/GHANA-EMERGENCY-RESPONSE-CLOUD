@@ -51,7 +51,7 @@ async function getRecipients(
       recipients.push({ email: recipient.value });
     } else if (recipient.type === 'role') {
       // Get all users with this role
-      const users = await prisma.user.findMany({
+      const users = await prisma.users.findMany({
         where: {
           role: recipient.value as any,
           isActive: true,

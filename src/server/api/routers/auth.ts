@@ -25,7 +25,7 @@ export const authRouter = createTRPCRouter({
     )
     .mutation(async ({ input, ctx }) => {
       // Check if user exists
-      const existingUser = await ctx.prisma.user.findFirst({
+      const existingUser = await ctx.prisma.users.findFirst({
         where: {
           OR: [
             { email: input.email.toLowerCase() },
@@ -45,7 +45,7 @@ export const authRouter = createTRPCRouter({
       const passwordHash = await hashPassword(input.password);
 
       // Create user
-      const user = await ctx.prisma.user.create({
+      const user = await ctx.prisma.users.create({
         data: {
           name: input.name,
           email: input.email.toLowerCase(),
@@ -89,7 +89,7 @@ export const authRouter = createTRPCRouter({
   requestPasswordReset: publicProcedure
     .input(z.object({ email: z.string().email() }))
     .mutation(async ({ input, ctx }) => {
-      const user = await ctx.prisma.user.findUnique({
+      const user = await ctx.prisma.users.findUnique({
         where: { email: input.email.toLowerCase() },
       });
 

@@ -70,7 +70,7 @@ export async function handleNewIncident(incidentData: {
   );
 
   for (const agency of nearbyAgencies) {
-    const agencyAdmin = await prisma.user.findFirst({
+    const agencyAdmin = await prisma.users.findFirst({
       where: {
         agencyId: agency.id,
         role: 'AGENCY_ADMIN',
@@ -134,7 +134,7 @@ export async function handleDispatchAssignment(assignmentData: {
 
   // 2. If responder specified, verify they belong to agency
   if (assignmentData.responderId) {
-    const responder = await prisma.user.findUnique({
+    const responder = await prisma.users.findUnique({
       where: { id: assignmentData.responderId },
     });
 
@@ -278,7 +278,7 @@ export async function handleStatusUpdate(updateData: {
 
   // 3. Update user location
   if (updateData.latitude && updateData.longitude) {
-    await prisma.user.update({
+    await prisma.users.update({
       where: { id: updateData.userId },
       data: {
         lastLatitude: updateData.latitude,

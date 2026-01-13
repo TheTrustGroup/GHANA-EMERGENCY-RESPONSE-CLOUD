@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     const data = registerSchema.parse(body);
 
     // Check if user already exists
-    const existingUser = await prisma.user.findFirst({
+    const existingUser = await prisma.users.findFirst({
       where: {
         OR: [{ email: data.email }, { phone: formatGhanaPhone(data.phone) }],
       },
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     const passwordHash = await hashPassword(data.password);
 
     // Create user
-    const user = await prisma.user.create({
+    const user = await prisma.users.create({
       data: {
         name: data.name,
         email: data.email,

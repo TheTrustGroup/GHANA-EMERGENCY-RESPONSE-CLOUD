@@ -72,7 +72,7 @@ export async function createNotification(
  * Send notification to a specific user
  */
 export async function sendToUser(userId: string, notification: any) {
-  const user = await prisma.user.findUnique({
+  const user = await prisma.users.findUnique({
     where: { id: userId },
     select: {
       id: true,
@@ -157,7 +157,7 @@ export async function sendToAgency(agencyId: string, data: NotificationData) {
  * Send notification to all users with a specific role
  */
 export async function sendToRole(role: UserRole, data: NotificationData) {
-  const users = await prisma.user.findMany({
+  const users = await prisma.users.findMany({
     where: { role },
     select: { id: true },
   });

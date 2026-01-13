@@ -178,7 +178,7 @@ export const agenciesRouter = createTRPCRouter({
           : null;
 
       // Get responder count
-      const responderCount = await ctx.prisma.user.count({
+      const responderCount = await ctx.prisma.users.count({
         where: {
           agencyId: input.id,
           role: 'RESPONDER',
@@ -224,14 +224,14 @@ export const agenciesRouter = createTRPCRouter({
 
       // Get total and available responders
       const [totalResponders, availableResponders] = await Promise.all([
-        ctx.prisma.user.count({
+        ctx.prisma.users.count({
           where: {
             agencyId: input.agencyId,
             role: 'RESPONDER',
             isActive: true,
           },
         }),
-        ctx.prisma.user.count({
+        ctx.prisma.users.count({
           where: {
             agencyId: input.agencyId,
             role: 'RESPONDER',

@@ -56,7 +56,7 @@ export const dispatchRouter = createTRPCRouter({
 
       // Verify responder if provided
       if (input.responderId) {
-        const responder = await ctx.prisma.user.findUnique({
+        const responder = await ctx.prisma.users.findUnique({
           where: { id: input.responderId },
         });
 
@@ -120,7 +120,7 @@ export const dispatchRouter = createTRPCRouter({
       }
 
       // Notify agency admin
-      const agencyAdmin = await ctx.prisma.user.findFirst({
+      const agencyAdmin = await ctx.prisma.users.findFirst({
         where: {
           agencyId: input.agencyId,
           role: 'AGENCY_ADMIN',
@@ -211,7 +211,7 @@ export const dispatchRouter = createTRPCRouter({
       });
 
       // Notify agency admin
-      const agencyAdmin = await ctx.prisma.user.findFirst({
+      const agencyAdmin = await ctx.prisma.users.findFirst({
         where: {
           agencyId: input.agencyId,
           role: 'AGENCY_ADMIN',
@@ -420,7 +420,7 @@ export const dispatchRouter = createTRPCRouter({
   getRespondersByAgency: protectedProcedure
     .input(z.object({ agencyId: z.string().cuid() }))
     .query(async ({ input, ctx }) => {
-      const responders = await ctx.prisma.user.findMany({
+      const responders = await ctx.prisma.users.findMany({
         where: {
           agencyId: input.agencyId,
           role: 'RESPONDER',
@@ -649,7 +649,7 @@ export const dispatchRouter = createTRPCRouter({
 
       // Update user location
       if (input.latitude && input.longitude) {
-        await ctx.prisma.user.update({
+        await ctx.prisma.users.update({
           where: { id: ctx.session.user.id },
           data: {
             lastLatitude: input.latitude,

@@ -298,7 +298,7 @@ export const messagesRouter = createTRPCRouter({
       const senderIds = new Set(messageSenders.map((m) => m.senderId));
 
       // Get all participants
-      const participants = await ctx.prisma.user.findMany({
+      const participants = await ctx.prisma.users.findMany({
         where: {
           OR: [
             ...(incident.reportedById ? [{ id: incident.reportedById }] : []),
