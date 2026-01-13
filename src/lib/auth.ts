@@ -216,13 +216,25 @@ export async function validateCredentials(
   isActive: boolean;
 } | null> {
   try {
-    // Try to find user by email or phone
+    // Normalize identifier - always lowercase for email comparison
+    // Phone numbers are already formatted by the authorize function
+    const normalizedIdentifier = identifier.toLowerCase().trim();
+    
+    // Check if identifier looks like an email or phone
+    const isEmail = normalizedIdentifier.includes('@');
+    
+    // Try to find user by email (case-insensitive) or phone
     const user = await prisma.user.findFirst({
       where: {
-        OR: [
-          { email: identifier },
-          { phone: identifier },
-        ],
+        OR: isEmail
+          ? [
+              // For email, use lowercase comparison
+              { email: normalizedIdentifier },
+            ]
+          : [
+              // For phone, use exact match (already formatted)
+              { phone: identifier },
+            ],
         isActive: true,
       },
     });
