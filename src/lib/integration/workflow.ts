@@ -242,7 +242,7 @@ export async function handleStatusUpdate(updateData: {
   // 1. Get assignment
   const assignment = await prisma.dispatch_assignments.findUnique({
     where: { id: updateData.assignmentId },
-    include: { incident: true, responder: true },
+    include: { incidents: true, users: true },
   });
 
   if (!assignment) {
@@ -327,7 +327,7 @@ export async function handleStatusUpdate(updateData: {
   });
 
   // 6. Notify reporter
-  if (assignment.incident.reportedById) {
+  if (assignment.incidents.reportedById) {
     const messages: Record<string, string> = {
       ACCEPTED: 'Responder has accepted the assignment',
       EN_ROUTE: 'Responder is on the way',
@@ -335,7 +335,7 @@ export async function handleStatusUpdate(updateData: {
       COMPLETED: 'Incident has been resolved',
     };
 
-    await createNotification(assignment.incident.reportedById, {
+    await createNotification(assignment.incidents.reportedById, {
       type: NotificationType.STATUS_UPDATE,
       title: 'Incident Update',
       message: messages[updateData.status] || 'Status updated',

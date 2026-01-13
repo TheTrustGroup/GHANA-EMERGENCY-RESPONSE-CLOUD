@@ -30,6 +30,7 @@ export const auditRouter = createTRPCRouter({
 
       const auditLog = await ctx.prisma.audit_logs.create({
         data: {
+        id: `audit-${Date.now()}-${Math.random().toString(36).substring(7)}`,
           userId: ctx.session.user.id,
           action: input.action,
           entity: input.entity,
@@ -57,7 +58,7 @@ export const auditRouter = createTRPCRouter({
           entityId: input.entityId,
         },
         include: {
-          user: {
+          users: {
             select: {
               id: true,
               name: true,
@@ -150,7 +151,7 @@ export const auditRouter = createTRPCRouter({
     .query(async ({ input, ctx }) => {
       const logs = await ctx.prisma.audit_logs.findMany({
         include: {
-          user: {
+          users: {
             select: {
               id: true,
               name: true,

@@ -65,11 +65,11 @@ export async function generateReport(
 
     // 3. Fetch data
     const [incidents, agencies, responders] = await Promise.all([
-      prisma.incident.findMany({
+      prisma.incidents.findMany({
         where,
         include: {
-          reportedBy: { select: { name: true, email: true } },
-          assignedAgency: { select: { name: true } },
+          users: { select: { name: true, email: true } },
+          agencies: { select: { name: true } },
         },
         orderBy: { createdAt: 'desc' },
         take: 1000, // Limit for performance

@@ -60,6 +60,7 @@ export const usersRouter = createTRPCRouter({
     // Create audit log
     await ctx.prisma.audit_logs.create({
       data: {
+        id: `audit-${Date.now()}-${Math.random().toString(36).substring(7)}`,
         userId: ctx.session.user.id,
         action: 'profile_updated',
         entity: 'User',
@@ -130,6 +131,7 @@ export const usersRouter = createTRPCRouter({
       // Create audit log
       await ctx.prisma.audit_logs.create({
         data: {
+        id: `audit-${Date.now()}-${Math.random().toString(36).substring(7)}`,
           userId: ctx.session.user.id,
           action: 'user_role_updated',
           entity: 'User',
@@ -170,6 +172,7 @@ export const usersRouter = createTRPCRouter({
       // Create audit log
       await ctx.prisma.audit_logs.create({
         data: {
+        id: `audit-${Date.now()}-${Math.random().toString(36).substring(7)}`,
           userId: ctx.session.user.id,
           action: 'user_deactivated',
           entity: 'User',
@@ -254,7 +257,7 @@ export const usersRouter = createTRPCRouter({
       };
     } else if (role === 'CITIZEN') {
       // Get citizen-specific stats
-      const incidents = await ctx.prisma.incident.findMany({
+      const incidents = await ctx.prisma.incidents.findMany({
         where: {
           reportedById: userId,
         },

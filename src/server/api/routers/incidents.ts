@@ -88,6 +88,7 @@ export const incidentsRouter = createTRPCRouter({
       if (ctx.session?.user) {
         await ctx.prisma.audit_logs.create({
           data: {
+        id: `audit-${Date.now()}-${Math.random().toString(36).substring(7)}`,
             userId: ctx.session.user.id,
             action: 'CREATE_INCIDENT',
             entity: 'Incident',
@@ -129,6 +130,7 @@ export const incidentsRouter = createTRPCRouter({
     // Create audit log
     await ctx.prisma.audit_logs.create({
       data: {
+        id: `audit-${Date.now()}-${Math.random().toString(36).substring(7)}`,
         userId: ctx.session.user.id,
         action: 'incident_created',
         entity: 'Incident',
@@ -140,7 +142,7 @@ export const incidentsRouter = createTRPCRouter({
     // Notify relevant agencies for critical/high severity incidents
     if (input.severity === IncidentSeverity.CRITICAL || input.severity === IncidentSeverity.HIGH) {
       // Find nearby agencies
-      const nearbyAgencies = await ctx.prisma.agency.findMany({
+      const nearbyAgencies = await ctx.prisma.agencies.findMany({
         where: {
           isActive: true,
           type: {
@@ -335,6 +337,7 @@ export const incidentsRouter = createTRPCRouter({
       // Create audit log
       await ctx.prisma.audit_logs.create({
         data: {
+        id: `audit-${Date.now()}-${Math.random().toString(36).substring(7)}`,
           userId: ctx.session.user.id,
           action: 'incident_updated',
           entity: 'Incident',
@@ -405,6 +408,7 @@ export const incidentsRouter = createTRPCRouter({
       // Create audit log
       await ctx.prisma.audit_logs.create({
         data: {
+        id: `audit-${Date.now()}-${Math.random().toString(36).substring(7)}`,
           userId: ctx.session.user.id,
           action: 'incident_status_changed',
           entity: 'Incident',
@@ -432,7 +436,7 @@ export const incidentsRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const [incident, agency] = await Promise.all([
         ctx.prisma.incidents.findUnique({ where: { id: input.incidentId } }),
-        ctx.prisma.agency.findUnique({ where: { id: input.agencyId } }),
+        ctx.prisma.agencies.findUnique({ where: { id: input.agencyId } }),
       ]);
 
       if (!incident) {
@@ -478,6 +482,7 @@ export const incidentsRouter = createTRPCRouter({
       // Create audit log
       await ctx.prisma.audit_logs.create({
         data: {
+        id: `audit-${Date.now()}-${Math.random().toString(36).substring(7)}`,
           userId: ctx.session.user.id,
           action: 'ASSIGN_AGENCY',
           entity: 'Incident',

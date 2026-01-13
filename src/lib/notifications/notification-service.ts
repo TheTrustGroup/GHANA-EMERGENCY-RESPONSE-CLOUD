@@ -50,6 +50,7 @@ export interface NotificationPreferences {
 export async function createNotification(userId: string, data: NotificationData) {
   const notification = await prisma.notifications.create({
     data: {
+      id: `notification-${Date.now()}-${Math.random().toString(36).substring(7)}`,
       userId,
       type: data.type,
       title: data.title,

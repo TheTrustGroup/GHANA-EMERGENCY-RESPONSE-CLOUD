@@ -28,6 +28,7 @@ export async function logSecurityEvent(entry: AuditLogEntry): Promise<void> {
 
     await prisma.audit_logs.create({
       data: {
+        id: `audit-${Date.now()}-${Math.random().toString(36).substring(7)}`,
         userId: entry.userId || systemUserId,
         action: entry.action,
         entity: entry.entity,

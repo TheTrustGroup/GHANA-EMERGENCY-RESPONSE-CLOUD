@@ -19,11 +19,11 @@ export const messagesRouter = createTRPCRouter({
     )
     .query(async ({ input, ctx }) => {
       // Verify incident exists and user has access
-      const incident = await ctx.prisma.incident.findUnique({
+      const incident = await ctx.prisma.incidents.findUnique({
         where: { id: input.incidentId },
         select: {
           id: true,
-          reportedById: true,
+          usersId: true,
           assignedAgencyId: true,
         },
       });
@@ -44,7 +44,7 @@ export const messagesRouter = createTRPCRouter({
         (ctx.session.user.role === 'AGENCY_ADMIN' &&
           incident.assignedAgencyId === ctx.session.user.agencyId) ||
         // Citizens can view incidents they reported
-        (ctx.session.user.role === 'CITIZEN' && incident.reportedById === ctx.session.user.id);
+        (ctx.session.user.role === 'CITIZEN' && incident.usersId === ctx.session.user.id);
 
       if (!canAccess) {
         throw new TRPCError({
@@ -102,11 +102,11 @@ export const messagesRouter = createTRPCRouter({
     )
     .mutation(async ({ input, ctx }) => {
       // Verify incident exists and user has access
-      const incident = await ctx.prisma.incident.findUnique({
+      const incident = await ctx.prisma.incidents.findUnique({
         where: { id: input.incidentId },
         select: {
           id: true,
-          reportedById: true,
+          usersId: true,
           assignedAgencyId: true,
         },
       });
@@ -124,7 +124,7 @@ export const messagesRouter = createTRPCRouter({
         ctx.session.user.role === 'DISPATCHER' ||
         (ctx.session.user.role === 'AGENCY_ADMIN' &&
           incident.assignedAgencyId === ctx.session.user.agencyId) ||
-        (ctx.session.user.role === 'CITIZEN' && incident.reportedById === ctx.session.user.id);
+        (ctx.session.user.role === 'CITIZEN' && incident.usersId === ctx.session.user.id);
 
       if (!canAccess) {
         throw new TRPCError({
@@ -155,6 +155,7 @@ export const messagesRouter = createTRPCRouter({
       // Create audit log
       await ctx.prisma.audit_logs.create({
         data: {
+        id: `audit-${Date.now()}-${Math.random().toString(36).substring(7)}`,
           userId: ctx.session.user.id,
           action: 'message_sent',
           entity: 'Message',
@@ -164,10 +165,10 @@ export const messagesRouter = createTRPCRouter({
       });
 
       // Notify all incident participants except sender
-      const incidentWithParticipants = await ctx.prisma.incident.findUnique({
+      const incidentWithParticipants = await ctx.prisma.incidents.findUnique({
         where: { id: input.incidentId },
         include: {
-          reportedBy: { select: { id: true } },
+          users: { select: { id: true } },
           assignedAgency: {
             include: {
               users: { select: { id: true } },
@@ -181,10 +182,10 @@ export const messagesRouter = createTRPCRouter({
 
         // Add reporter
         if (
-          incidentWithParticipants.reportedById &&
-          incidentWithParticipants.reportedById !== ctx.session.user.id
+          incidentWithParticipants.usersId &&
+          incidentWithParticipants.usersId !== ctx.session.user.id
         ) {
-          participantIds.add(incidentWithParticipants.reportedById);
+          participantIds.add(incidentWithParticipants.usersId);
         }
 
         // Add agency users
@@ -253,10 +254,10 @@ export const messagesRouter = createTRPCRouter({
     )
     .query(async ({ input, ctx }) => {
       // Get all users who have sent messages or are involved in the incident
-      const incident = await ctx.prisma.incident.findUnique({
+      const incident = await ctx.prisma.incidents.findUnique({
         where: { id: input.incidentId },
         include: {
-          reportedBy: {
+          users: {
             select: {
               id: true,
               name: true,
@@ -301,7 +302,7 @@ export const messagesRouter = createTRPCRouter({
       const participants = await ctx.prisma.users.findMany({
         where: {
           OR: [
-            ...(incident.reportedById ? [{ id: incident.reportedById }] : []),
+            ...(incident.usersId ? [{ id: incident.usersId }] : []),
             { id: { in: Array.from(senderIds) } },
             ...(incident.assignedAgency ? [{ agencyId: incident.assignedAgencyId }] : []),
           ],

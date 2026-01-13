@@ -65,6 +65,7 @@ export const dispatchRouter = createTRPCRouter({
 
     const dispatch = await ctx.prisma.dispatch_assignments.create({
       data: {
+        id: `dispatch-${Date.now()}-${Math.random().toString(36).substring(7)}`,
         incidentId: input.incidentId,
         agencyId: input.agencyId,
         responderId: input.responderId!,
@@ -73,7 +74,7 @@ export const dispatchRouter = createTRPCRouter({
         status: 'DISPATCHED',
       },
       include: {
-        incident: {
+        incidents: {
           select: {
             id: true,
             title: true,
@@ -82,10 +83,10 @@ export const dispatchRouter = createTRPCRouter({
             longitude: true,
           },
         },
-        agency: {
+        agencies: {
           select: { id: true, name: true },
         },
-        responder: {
+        users: {
           select: { id: true, name: true, email: true },
         },
       },
@@ -94,6 +95,7 @@ export const dispatchRouter = createTRPCRouter({
     // Create audit log
     await ctx.prisma.audit_logs.create({
       data: {
+        id: `audit-${Date.now()}-${Math.random().toString(36).substring(7)}`,
         userId: ctx.session.user.id,
         action: 'dispatch_created',
         entity: 'DispatchAssignment',
@@ -103,11 +105,11 @@ export const dispatchRouter = createTRPCRouter({
     });
 
     // Notify responder if assigned
-    if (dispatch.responder) {
-      await createNotification(dispatch.responder.id, {
+    if (dispatch.users) {
+      await createNotification(dispatch.users.id, {
         type: NotificationType.DISPATCH_ASSIGNMENT,
         title: 'New Dispatch Assignment',
-        message: `You've been assigned to: ${dispatch.incident.title}`,
+        message: `You've been assigned to: ${dispatch.incidents.title}`,
         relatedEntityType: 'dispatch',
         relatedEntityId: dispatch.id,
         priority: input.priority >= 4 ? 'critical' : 'high',
@@ -126,7 +128,7 @@ export const dispatchRouter = createTRPCRouter({
       await createNotification(agencyAdmin.id, {
         type: NotificationType.DISPATCH_ASSIGNMENT,
         title: 'New Dispatch Assignment',
-        message: `Incident "${dispatch.incident.title}" assigned to your agency`,
+        message: `Incident "${dispatch.incidents.title}" assigned to your agency`,
         relatedEntityType: 'dispatch',
         relatedEntityId: dispatch.id,
         priority: 'normal',
@@ -193,6 +195,7 @@ export const dispatchRouter = createTRPCRouter({
       const systemResponderId = 'system-responder-placeholder';
       const dispatch = await ctx.prisma.dispatch_assignments.create({
         data: {
+          id: `dispatch-${Date.now()}-${Math.random().toString(36).substring(7)}`,
           incidentId: input.incidentId,
           agencyId: input.agencyId,
           responderId: systemResponderId,
@@ -200,8 +203,8 @@ export const dispatchRouter = createTRPCRouter({
           status: 'DISPATCHED',
         },
         include: {
-          incident: true,
-          agency: true,
+          incidents: true,
+          agencies: true,
         },
       });
 
@@ -259,6 +262,7 @@ export const dispatchRouter = createTRPCRouter({
       // Create audit log
       await ctx.prisma.audit_logs.create({
         data: {
+        id: `audit-${Date.now()}-${Math.random().toString(36).substring(7)}`,
           userId: ctx.session.user.id,
           action: 'dispatch_accepted',
           entity: 'DispatchAssignment',
@@ -344,6 +348,7 @@ export const dispatchRouter = createTRPCRouter({
       // Create audit log
       await ctx.prisma.audit_logs.create({
         data: {
+        id: `audit-${Date.now()}-${Math.random().toString(36).substring(7)}`,
           userId: ctx.session.user.id,
           action: 'dispatch_completed',
           entity: 'DispatchAssignment',

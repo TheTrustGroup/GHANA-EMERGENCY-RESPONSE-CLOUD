@@ -103,7 +103,7 @@ export const analyticsRouter = createTRPCRouter({
         select: {
           responseTime: true,
           assignedAgencyId: true,
-          assignedAgency: {
+          agencies: {
             select: { id: true, name: true },
           },
         },
@@ -113,7 +113,7 @@ export const analyticsRouter = createTRPCRouter({
       const byAgency = incidents.reduce(
         (acc, incident) => {
           const agencyId = incident.assignedAgencyId || 'unassigned';
-          const agencyName = incident.assignedAgency?.name || 'Unassigned';
+          const agencyName = incident.agencies?.name || 'Unassigned';
 
           if (!acc[agencyId]) {
             acc[agencyId] = {
@@ -635,7 +635,7 @@ export const analyticsRouter = createTRPCRouter({
       where: {
         role: 'RESPONDER',
         isActive: true,
-        dispatchAssignments: {
+        dispatch_assignments: {
           some: {
             status: {
               in: ['DISPATCHED', 'ACCEPTED', 'EN_ROUTE', 'ARRIVED'],

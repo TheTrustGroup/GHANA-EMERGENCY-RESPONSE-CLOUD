@@ -47,6 +47,7 @@ export const authRouter = createTRPCRouter({
       // Create user
       const user = await ctx.prisma.users.create({
         data: {
+          id: `user-${Date.now()}-${Math.random().toString(36).substring(7)}`,
           name: input.name,
           email: input.email.toLowerCase(),
           phone: formatGhanaPhone(input.phone),
@@ -54,6 +55,7 @@ export const authRouter = createTRPCRouter({
           role: input.role,
           agencyId: input.agencyId || null,
           isActive: input.role === UserRole.CITIZEN,
+          updatedAt: new Date(),
         },
         select: {
           id: true,
@@ -67,6 +69,7 @@ export const authRouter = createTRPCRouter({
       // Create audit log
       await ctx.prisma.audit_logs.create({
         data: {
+        id: `audit-${Date.now()}-${Math.random().toString(36).substring(7)}`,
           userId: user.id,
           action: 'user_registered',
           entity: 'User',

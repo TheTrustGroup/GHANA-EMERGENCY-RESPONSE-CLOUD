@@ -68,12 +68,17 @@ export const agenciesRouter = createTRPCRouter({
 
   create: adminProcedure.input(createAgencySchema).mutation(async ({ input, ctx }) => {
     const agency = await ctx.prisma.agencies.create({
-      data: input,
+      data: {
+        ...input,
+        id: `agency-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+        updatedAt: new Date(),
+      },
     });
 
     // Create audit log
     await ctx.prisma.audit_logs.create({
       data: {
+        id: `audit-${Date.now()}-${Math.random().toString(36).substring(7)}`,
         userId: ctx.session.user.id,
         action: 'agency_created',
         entity: 'Agency',
@@ -115,6 +120,7 @@ export const agenciesRouter = createTRPCRouter({
       // Create audit log
       await ctx.prisma.audit_logs.create({
         data: {
+          id: `audit-${Date.now()}-${Math.random().toString(36).substring(7)}`,
           userId: ctx.session.user.id,
           action: 'agency_updated',
           entity: 'Agency',
@@ -145,16 +151,16 @@ export const agenciesRouter = createTRPCRouter({
 
       // Get incident statistics
       const [totalIncidents, activeIncidents, completedIncidents] = await Promise.all([
-        ctx.prisma.incident.count({
+        ctx.prisma.incidents.count({
           where: { assignedAgencyId: input.id },
         }),
-        ctx.prisma.incident.count({
+        ctx.prisma.incidents.count({
           where: {
             assignedAgencyId: input.id,
             status: { not: 'CLOSED' },
           },
         }),
-        ctx.prisma.incident.count({
+        ctx.prisma.incidents.count({
           where: {
             assignedAgencyId: input.id,
             status: 'RESOLVED',
@@ -163,7 +169,7 @@ export const agenciesRouter = createTRPCRouter({
       ]);
 
       // Calculate average response time
-      const incidentsWithResponseTime = await ctx.prisma.incident.findMany({
+      const incidentsWithResponseTime = await ctx.prisma.incidents.findMany({
         where: {
           assignedAgencyId: input.id,
           responseTime: { not: null },
@@ -215,7 +221,7 @@ export const agenciesRouter = createTRPCRouter({
       }
 
       // Get active incidents
-      const activeIncidents = await ctx.prisma.incident.count({
+      const activeIncidents = await ctx.prisma.incidents.count({
         where: {
           assignedAgencyId: input.agencyId,
           status: { not: 'CLOSED' },
@@ -236,7 +242,7 @@ export const agenciesRouter = createTRPCRouter({
             agencyId: input.agencyId,
             role: 'RESPONDER',
             isActive: true,
-            dispatchAssignments: {
+            dispatch_assignments: {
               none: {
                 status: {
                   in: ['DISPATCHED', 'ACCEPTED', 'EN_ROUTE', 'ARRIVED'],
@@ -248,7 +254,7 @@ export const agenciesRouter = createTRPCRouter({
       ]);
 
       // Calculate average response time
-      const incidentsWithResponseTime = await ctx.prisma.incident.findMany({
+      const incidentsWithResponseTime = await ctx.prisma.incidents.findMany({
         where: {
           assignedAgencyId: input.agencyId,
           responseTime: { not: null },
@@ -267,7 +273,7 @@ export const agenciesRouter = createTRPCRouter({
       // Get resolved today
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const resolvedToday = await ctx.prisma.incident.count({
+      const resolvedToday = await ctx.prisma.incidents.count({
         where: {
           assignedAgencyId: input.agencyId,
           status: 'RESOLVED',
@@ -276,13 +282,13 @@ export const agenciesRouter = createTRPCRouter({
       });
 
       // Calculate resolution rate
-      const totalAssigned = await ctx.prisma.incident.count({
+      const totalAssigned = await ctx.prisma.incidents.count({
         where: {
           assignedAgencyId: input.agencyId,
         },
       });
 
-      const resolvedTotal = await ctx.prisma.incident.count({
+      const resolvedTotal = await ctx.prisma.incidents.count({
         where: {
           assignedAgencyId: input.agencyId,
           status: 'RESOLVED',
@@ -301,7 +307,7 @@ export const agenciesRouter = createTRPCRouter({
         const nextDate = new Date(date);
         nextDate.setDate(nextDate.getDate() + 1);
 
-        const count = await ctx.prisma.incident.count({
+        const count = await ctx.prisma.incidents.count({
           where: {
             assignedAgencyId: input.agencyId,
             createdAt: {
@@ -318,7 +324,7 @@ export const agenciesRouter = createTRPCRouter({
       }
 
       // Get category breakdown
-      const categoryData = await ctx.prisma.incident.groupBy({
+      const categoryData = await ctx.prisma.incidents.groupBy({
         by: ['category'],
         where: {
           assignedAgencyId: input.agencyId,
