@@ -1,15 +1,15 @@
 'use client';
 
+import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc/client';
-import { Button } from '@/components/ui/premium/Button';
-import { Card, CardContent } from '@/components/ui/premium/Card';
-import { Badge } from '@/components/ui/premium/Badge';
-import {
-  AlertCircle,
-  MapPin,
-  Clock,
+import { motion, AnimatePresence, useAnimation } from 'framer-motion';
+import { 
+  AlertCircle, 
+  Phone, 
+  MapPin, 
+  Clock, 
   ChevronRight,
   Bell,
   Shield,
@@ -20,583 +20,849 @@ import {
   FileText,
   User,
   Plus,
-  TrendingUp,
   CheckCircle2,
+  ArrowRight,
+  Menu,
+  X,
+  Camera,
+  Send,
+  Star,
+  TrendingUp,
+  Activity,
+  Zap,
+  Navigation,
+  Search,
+  Settings,
+  HelpCircle,
+  LogOut,
+  ChevronDown,
+  Circle
 } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { formatDistanceToNow } from 'date-fns';
-import { ClientOnly } from '@/components/ui/ClientOnly';
+import { toast } from 'sonner';
+import { haptics } from '@/lib/haptics';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 
-export default function CitizenDashboard() {
+export default function CitizenDashboardApp() {
   const { data: session } = useSession();
   const router = useRouter();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('home');
+  const [showReportModal, setShowReportModal] = useState(false);
+  
+  const { data: myIncidents, isLoading, refetch } = trpc.incidents.getAll.useQuery({ 
+    page: 1,
+    pageSize: 20,
+    sortBy: 'createdAt',
+    sortOrder: 'desc',
+  }, { enabled: !!session?.user?.id, refetchInterval: 30000 });
 
-  const { data: myIncidents, isLoading } = trpc.incidents.getAll.useQuery(
-    {
-      page: 1,
-      pageSize: 20,
-      sortBy: 'createdAt',
-      sortOrder: 'desc',
-    },
-    { enabled: !!session?.user?.id, refetchInterval: 30000 }
+  const { data: stats } = trpc.users.getMyStats.useQuery(
+    undefined,
+    { enabled: !!session?.user?.id }
   );
 
-  // Calculate stats from incidents
-  const stats = {
+  const { data: notifications } = trpc.notifications.getMyNotifications.useQuery(
+    { limit: 10, unreadOnly: false },
+    { enabled: !!session?.user?.id }
+  );
+
+  // Pull to refresh
+  const { pulling, refreshing } = usePullToRefresh(async () => {
+    await refetch();
+    haptics.success();
+  });
+
+  // Greeting based on time
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 18) return 'Good Afternoon';
+    return 'Good Evening';
+  };
+
+  // Calculate stats from incidents if getMyStats doesn't return what we need
+  const displayStats = {
     totalReports: myIncidents?.incidents.length || 0,
-    activeReports:
-      myIncidents?.incidents.filter((i) => i.status !== 'RESOLVED' && i.status !== 'CLOSED')
-        .length || 0,
-    resolvedReports:
-      myIncidents?.incidents.filter((i) => i.status === 'RESOLVED' || i.status === 'CLOSED')
-        .length || 0,
+    activeReports: myIncidents?.incidents.filter((i) => i.status !== 'RESOLVED' && i.status !== 'CLOSED').length || 0,
+    resolvedReports: myIncidents?.incidents.filter((i) => i.status === 'RESOLVED' || i.status === 'CLOSED').length || 0,
+    unreadNotifications: notifications?.notifications.filter(n => !n.isRead).length || 0,
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
-      {/* HERO SECTION - Emergency CTA */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-red-600 via-red-700 to-red-800">
-        {/* Animated background pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
-              backgroundSize: '40px 40px',
-            }}
-          />
-        </div>
-
-        <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-center"
-          >
-            {/* Welcome Message */}
-            <div className="mb-8">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-                className="mb-4 inline-flex items-center gap-3 rounded-full bg-white/10 px-6 py-3 backdrop-blur-sm"
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-24">
+      
+      {/* TOP APP BAR - Glassmorphism */}
+      <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-200/50 shadow-sm">
+        <div className="px-4 py-3">
+          <div className="flex items-center justify-between">
+            
+            {/* Left: Menu + Greeting */}
+            <div className="flex items-center gap-3">
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={() => {
+                  setMenuOpen(true);
+                  haptics.light();
+                }}
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg shadow-red-500/30"
               >
-                <div className="h-3 w-3 animate-pulse rounded-full bg-green-400" />
-                <span className="font-semibold text-white">System Online</span>
-              </motion.div>
-
-              <h1 className="mb-3 text-4xl font-black text-white sm:text-5xl">
-                Welcome back, {session?.user?.name?.split(' ')[0] || 'User'}
-              </h1>
-              <p className="text-xl text-red-100">Emergency help is one tap away</p>
+                <Menu className="h-5 w-5 text-white" />
+              </motion.button>
+              <div>
+                <p className="text-xs text-gray-500 font-medium">{getGreeting()}</p>
+                <h1 className="text-lg font-black text-gray-900">
+                  {session?.user?.name?.split(' ')[0] || 'User'}
+                </h1>
+              </div>
             </div>
 
-            {/* EMERGENCY BUTTON - Hero Element */}
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            {/* Right: Notifications */}
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => {
+                router.push('/dashboard/notifications');
+                haptics.light();
+              }}
+              className="relative w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center"
             >
-              <Button
-                size="xl"
-                className="
-                  group relative 
-                  min-h-[80px]
-                  overflow-hidden border-4
-                  border-white/50
-                  bg-white px-16
-                  text-2xl
-                  font-black
-                  text-red-600
-                  shadow-2xl
-                  shadow-red-900/50
-                  hover:bg-red-50
-                  hover:shadow-red-900/70
-                "
-                onClick={() => router.push('/report')}
-                icon={<AlertCircle className="h-10 w-10" />}
-              >
-                {/* Pulse animation */}
-                <span className="absolute inset-0 animate-ping rounded-xl bg-white/30" />
-                <span className="relative">REPORT EMERGENCY</span>
-              </Button>
-            </motion.div>
-
-            {/* Quick Emergency Contacts */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="mx-auto mt-8 grid max-w-3xl grid-cols-2 gap-3 sm:grid-cols-4"
-            >
-              <EmergencyContact
-                icon={<Shield className="h-5 w-5" />}
-                name="Police"
-                number="191"
-                color="blue"
-              />
-              <EmergencyContact
-                icon={<Flame className="h-5 w-5" />}
-                name="Fire"
-                number="192"
-                color="orange"
-              />
-              <EmergencyContact
-                icon={<Heart className="h-5 w-5" />}
-                name="Ambulance"
-                number="193"
-                color="green"
-              />
-              <EmergencyContact
-                icon={<AlertCircle className="h-5 w-5" />}
-                name="NADMO"
-                number="0800"
-                color="purple"
-              />
-            </motion.div>
-          </motion.div>
+              <Bell className="h-5 w-5 text-gray-700" />
+              {displayStats.unreadNotifications > 0 && (
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 rounded-full text-white text-xs font-bold flex items-center justify-center"
+                >
+                  {displayStats.unreadNotifications}
+                </motion.span>
+              )}
+            </motion.button>
+          </div>
         </div>
       </div>
 
-      {/* MAIN CONTENT */}
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        {/* STATS GRID */}
+      {/* MAIN CONTENT - Scrollable */}
+      <div className="px-4 pt-6 pb-8 space-y-6">
+        
+        {/* EMERGENCY HERO CARD - Floating */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="mb-12 grid grid-cols-1 gap-6 sm:grid-cols-3"
+          className="relative overflow-hidden"
         >
-          <StatsCard
-            icon={<FileText className="h-6 w-6" />}
-            label="Total Reports"
-            value={stats.totalReports}
-            trend={null}
-            color="blue"
+          {/* Background with animated gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-3xl" />
+          
+          {/* Animated circles */}
+          <motion.div
+            animate={{ 
+              scale: [1, 1.2, 1],
+              opacity: [0.3, 0.1, 0.3]
+            }}
+            transition={{ duration: 3, repeat: Infinity }}
+            className="absolute top-0 right-0 w-40 h-40 bg-white rounded-full blur-3xl"
           />
-          <StatsCard
-            icon={<Clock className="h-6 w-6" />}
-            label="Active Now"
-            value={stats.activeReports}
-            trend={null}
-            color="orange"
-            pulse={stats.activeReports > 0}
+          <motion.div
+            animate={{ 
+              scale: [1.2, 1, 1.2],
+              opacity: [0.2, 0.3, 0.2]
+            }}
+            transition={{ duration: 4, repeat: Infinity }}
+            className="absolute bottom-0 left-0 w-32 h-32 bg-white rounded-full blur-3xl"
           />
-          <StatsCard
-            icon={<CheckCircle2 className="h-6 w-6" />}
-            label="Resolved"
-            value={stats.resolvedReports}
-            trend={null}
-            color="green"
-          />
+
+          {/* Content */}
+          <div className="relative p-6">
+            <div className="flex items-start justify-between mb-6">
+              <div>
+                <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 mb-3">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                  <span className="text-white text-xs font-bold">READY 24/7</span>
+                </div>
+                <h2 className="text-2xl font-black text-white mb-2">
+                  Need Emergency Help?
+                </h2>
+                <p className="text-red-100 text-sm">
+                  We're here for you. Help arrives in ~8 minutes
+                </p>
+              </div>
+              <Shield className="h-12 w-12 text-white/30" />
+            </div>
+
+            {/* HUGE EMERGENCY BUTTON */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                setShowReportModal(true);
+                haptics.medium();
+              }}
+              className="w-full h-16 bg-white text-red-600 rounded-2xl font-black text-lg shadow-2xl shadow-red-900/50 flex items-center justify-center gap-3 group relative overflow-hidden"
+            >
+              {/* Shine effect */}
+              <motion.div
+                animate={{ x: [-200, 200] }}
+                transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent transform skew-x-12"
+              />
+              
+              <AlertCircle className="h-6 w-6 group-hover:rotate-12 transition-transform" />
+              <span>REPORT EMERGENCY</span>
+              <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+            </motion.button>
+          </div>
         </motion.div>
 
+        {/* QUICK STATS - Card Grid */}
+        <div className="grid grid-cols-3 gap-3">
+          <StatCard
+            icon={FileText}
+            label="Reports"
+            value={displayStats.totalReports}
+            color="blue"
+            delay={0.1}
+          />
+          <StatCard
+            icon={Activity}
+            label="Active"
+            value={displayStats.activeReports}
+            color="orange"
+            pulse={displayStats.activeReports > 0}
+            delay={0.2}
+          />
+          <StatCard
+            icon={CheckCircle2}
+            label="Resolved"
+            value={displayStats.resolvedReports}
+            color="green"
+            delay={0.3}
+          />
+        </div>
+
+        {/* EMERGENCY CONTACTS - Horizontal Scroll */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-black text-gray-900">Quick Contact</h3>
+            <button className="text-sm text-blue-600 font-semibold">See All</button>
+          </div>
+          
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 hide-scrollbar">
+            <EmergencyContactCard
+              icon={Shield}
+              name="Police"
+              number="191"
+              gradient="from-blue-500 to-blue-600"
+              delay={0.1}
+            />
+            <EmergencyContactCard
+              icon={Flame}
+              name="Fire Service"
+              number="192"
+              gradient="from-orange-500 to-orange-600"
+              delay={0.2}
+            />
+            <EmergencyContactCard
+              icon={Heart}
+              name="Ambulance"
+              number="193"
+              gradient="from-red-500 to-red-600"
+              delay={0.3}
+            />
+            <EmergencyContactCard
+              icon={AlertCircle}
+              name="NADMO"
+              number="0800"
+              gradient="from-purple-500 to-purple-600"
+              delay={0.4}
+            />
+          </div>
+        </div>
+
         {/* MY REPORTS SECTION */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-        >
-          <div className="mb-6 flex items-center justify-between">
+        <div>
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900">My Emergency Reports</h2>
-              <p className="mt-1 text-gray-600">Track your submitted emergencies</p>
+              <h3 className="text-lg font-black text-gray-900">My Reports</h3>
+              <p className="text-sm text-gray-500">Track your emergency reports</p>
             </div>
             {myIncidents?.incidents && myIncidents.incidents.length > 0 && (
-              <Button
-                variant="ghost"
+              <button 
                 onClick={() => router.push('/dashboard/incidents')}
-                icon={<ChevronRight className="h-5 w-5" />}
-                iconPosition="right"
+                className="text-sm text-blue-600 font-semibold flex items-center gap-1"
               >
                 View All
-              </Button>
+                <ChevronRight className="h-4 w-4" />
+              </button>
             )}
           </div>
 
+          {/* Reports List */}
           {isLoading ? (
-            <div className="grid gap-4">
+            <div className="space-y-3">
               {[1, 2, 3].map((i) => (
-                <Card key={i} className="animate-pulse">
-                  <CardContent className="p-6">
-                    <div className="mb-4 h-6 w-3/4 rounded bg-gray-200" />
-                    <div className="h-4 w-1/2 rounded bg-gray-200" />
-                  </CardContent>
-                </Card>
+                <div key={i} className="h-32 bg-gray-100 rounded-2xl animate-pulse" />
               ))}
             </div>
           ) : !myIncidents?.incidents || myIncidents.incidents.length === 0 ? (
-            <Card variant="gradient" className="border-2 border-dashed">
-              <CardContent className="p-12 text-center">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: 'spring', stiffness: 200 }}
-                >
-                  <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-blue-100 to-blue-200">
-                    <FileText className="h-10 w-10 text-blue-600" />
-                  </div>
-                  <h3 className="mb-3 text-2xl font-bold text-gray-900">No Reports Yet</h3>
-                  <p className="mx-auto mb-6 max-w-md text-gray-600">
-                    You haven't reported any emergencies. When you do, they'll appear here for easy
-                    tracking.
-                  </p>
-                  <Button
-                    size="lg"
-                    variant="secondary"
-                    onClick={() => router.push('/report')}
-                    icon={<Plus className="h-5 w-5" />}
-                  >
-                    Report Your First Emergency
-                  </Button>
-                </motion.div>
-              </CardContent>
-            </Card>
+            <EmptyState router={router} />
           ) : (
-            <div className="grid gap-4">
-              {myIncidents.incidents.map((incident, index) => (
-                <motion.div
-                  key={incident.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <IncidentCard incident={incident} router={router} />
-                </motion.div>
-              ))}
+            <div className="space-y-3">
+              <AnimatePresence>
+                {myIncidents.incidents.slice(0, 5).map((incident, index) => (
+                  <motion.div
+                    key={incident.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <IncidentCard incident={incident} router={router} />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           )}
-        </motion.div>
+        </div>
 
-        {/* SAFETY TIPS SECTION */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-          className="mt-12"
-        >
-          <h2 className="mb-6 text-3xl font-bold text-gray-900">Safety Tips</h2>
-          <div className="grid gap-6 sm:grid-cols-2">
+        {/* SAFETY TIPS - Carousel */}
+        <div>
+          <h3 className="text-lg font-black text-gray-900 mb-4">Safety Tips</h3>
+          <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 hide-scrollbar">
             <SafetyTipCard
-              icon={<Flame className="h-6 w-6" />}
+              icon={Flame}
               title="Fire Safety"
-              description="Keep a fire extinguisher at home and know how to use it. Check smoke detectors monthly."
-              color="orange"
+              tip="Keep a fire extinguisher at home"
+              gradient="from-orange-500 to-red-500"
             />
             <SafetyTipCard
-              icon={<Heart className="h-6 w-6" />}
-              title="Medical Emergency"
-              description="Learn basic first aid and CPR. Know your blood type and keep medical records handy."
-              color="red"
-            />
-            <SafetyTipCard
-              icon={<Car className="h-6 w-6" />}
+              icon={Car}
               title="Road Safety"
-              description="Always wear seatbelts. Keep emergency contacts in your phone. Have a first aid kit."
-              color="blue"
+              tip="Always wear your seatbelt"
+              gradient="from-blue-500 to-purple-500"
             />
             <SafetyTipCard
-              icon={<Home className="h-6 w-6" />}
-              title="Home Preparedness"
-              description="Create an emergency kit with water, food, flashlight, and batteries. Plan evacuation routes."
-              color="green"
+              icon={Home}
+              title="Home Safety"
+              tip="Create an emergency kit"
+              gradient="from-green-500 to-teal-500"
             />
           </div>
-        </motion.div>
+        </div>
       </div>
 
-      {/* FLOATING BOTTOM NAV - Mobile */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white shadow-2xl lg:hidden">
-        <div className="grid h-20 grid-cols-4">
-          <NavButton icon={<Home />} label="Home" active />
-          <NavButton
-            icon={<FileText />}
-            label="Reports"
-            onClick={() => router.push('/dashboard/incidents')}
-          />
-          <NavButton
-            icon={<Bell />}
-            label="Alerts"
-            onClick={() => router.push('/dashboard/notifications')}
-          />
-          <NavButton
-            icon={<User />}
-            label="Profile"
-            onClick={() => router.push('/dashboard/settings')}
-          />
+      {/* BOTTOM NAVIGATION - iOS Style */}
+      <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} router={router} />
+
+      {/* SLIDE-OUT MENU */}
+      <SlideMenu open={menuOpen} onClose={() => setMenuOpen(false)} router={router} session={session} />
+
+      {/* REPORT MODAL */}
+      <ReportModal 
+        open={showReportModal} 
+        onClose={() => setShowReportModal(false)}
+        router={router}
+      />
+
+      {/* Hide scrollbar globally for this page */}
+      <style jsx global>{`
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
+    </div>
+  );
+}
+
+// ============================================
+// CHILD COMPONENTS - Premium Mobile UI
+// ============================================
+
+function StatCard({ icon: Icon, label, value, color, pulse, delay }: any) {
+  const colors = {
+    blue: { bg: 'from-blue-500 to-blue-600', light: 'bg-blue-50', text: 'text-blue-600' },
+    orange: { bg: 'from-orange-500 to-orange-600', light: 'bg-orange-50', text: 'text-orange-600' },
+    green: { bg: 'from-green-500 to-green-600', light: 'bg-green-50', text: 'text-green-600' },
+  }[color];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay }}
+      className={`relative overflow-hidden rounded-2xl ${colors.light} p-4 border-2 border-transparent hover:border-${color}-200 transition-all cursor-pointer`}
+    >
+      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${colors.bg} flex items-center justify-center mb-3 ${pulse ? 'animate-pulse' : ''}`}>
+        <Icon className="h-5 w-5 text-white" />
+      </div>
+      <p className="text-2xl font-black text-gray-900 mb-1">{value}</p>
+      <p className="text-xs text-gray-600 font-semibold">{label}</p>
+    </motion.div>
+  );
+}
+
+function EmergencyContactCard({ icon: Icon, name, number, gradient, delay }: any) {
+  return (
+    <motion.button
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay }}
+      whileTap={{ scale: 0.95 }}
+      onClick={() => {
+        window.location.href = `tel:${number}`;
+        haptics.medium();
+      }}
+      className={`flex-shrink-0 w-32 h-40 bg-gradient-to-br ${gradient} rounded-2xl p-4 shadow-xl relative overflow-hidden group`}
+    >
+      {/* Shine effect */}
+      <motion.div
+        animate={{ x: [-100, 100] }}
+        transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform skew-x-12"
+      />
+      
+      <div className="relative h-full flex flex-col items-center justify-between text-white">
+        <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+          <Icon className="h-7 w-7" />
         </div>
+        <div className="text-center">
+          <p className="font-bold text-sm mb-1">{name}</p>
+          <p className="text-2xl font-black">{number}</p>
+          <p className="text-xs opacity-80 mt-1">Tap to call</p>
+        </div>
+      </div>
+    </motion.button>
+  );
+}
+
+function IncidentCard({ incident, router }: any) {
+  const statusConfig: Record<string, any> = {
+    REPORTED: { 
+      bg: 'bg-yellow-50', 
+      border: 'border-yellow-200', 
+      text: 'text-yellow-700',
+      dot: 'bg-yellow-500',
+      label: 'Reported'
+    },
+    DISPATCHED: { 
+      bg: 'bg-blue-50', 
+      border: 'border-blue-200', 
+      text: 'text-blue-700',
+      dot: 'bg-blue-500',
+      label: 'Help Dispatched'
+    },
+    IN_PROGRESS: { 
+      bg: 'bg-purple-50', 
+      border: 'border-purple-200', 
+      text: 'text-purple-700',
+      dot: 'bg-purple-500',
+      label: 'In Progress'
+    },
+    RESOLVED: { 
+      bg: 'bg-green-50', 
+      border: 'border-green-200', 
+      text: 'text-green-700',
+      dot: 'bg-green-500',
+      label: 'Resolved'
+    },
+    CLOSED: { 
+      bg: 'bg-gray-50', 
+      border: 'border-gray-200', 
+      text: 'text-gray-700',
+      dot: 'bg-gray-500',
+      label: 'Closed'
+    },
+  };
+
+  const config = statusConfig[incident.status] || statusConfig.REPORTED;
+
+  const severityColor: Record<string, string> = {
+    CRITICAL: 'text-red-600',
+    HIGH: 'text-orange-600',
+    MEDIUM: 'text-yellow-600',
+    LOW: 'text-green-600',
+  }[incident.severity] || 'text-gray-600';
+
+  return (
+    <motion.div
+      whileTap={{ scale: 0.98 }}
+      onClick={() => {
+        router.push(`/dashboard/incidents/${incident.id}`);
+        haptics.light();
+      }}
+      className={`
+        relative rounded-2xl border-2 ${config.border} ${config.bg}
+        p-4 cursor-pointer
+        hover:shadow-lg transition-all
+      `}
+    >
+      {/* Status Bar */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <div className={`w-2 h-2 ${config.dot} rounded-full ${incident.status !== 'RESOLVED' && incident.status !== 'CLOSED' ? 'animate-pulse' : ''}`} />
+          <span className={`text-xs font-bold ${config.text}`}>
+            {config.label}
+          </span>
+        </div>
+        <span className="text-xs text-gray-500">
+          {formatTimeAgo(incident.createdAt)}
+        </span>
+      </div>
+
+      {/* Content */}
+      <div className="flex items-start gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-2">
+            <span className={`text-xs font-black ${severityColor}`}>
+              {incident.severity}
+            </span>
+            <span className="text-xs text-gray-500">•</span>
+            <span className="text-xs text-gray-600 font-medium">
+              {incident.category}
+            </span>
+          </div>
+          
+          <h4 className="font-bold text-gray-900 mb-2 line-clamp-2 leading-snug">
+            {incident.title || incident.description?.substring(0, 50) || 'Emergency Report'}
+          </h4>
+          
+          <div className="flex items-center gap-2 text-xs text-gray-600">
+            <MapPin className="h-3 w-3" />
+            <span className="truncate">{incident.region || 'Unknown Location'}</span>
+          </div>
+        </div>
+
+        <ChevronRight className="h-5 w-5 text-gray-400 flex-shrink-0 mt-1" />
+      </div>
+
+      {/* Progress Indicator */}
+      {incident.status !== 'RESOLVED' && incident.status !== 'CLOSED' && incident.agencies && (
+        <div className="mt-4 pt-3 border-t border-gray-200">
+          <div className="flex items-center gap-2">
+            <Activity className="h-4 w-4 text-blue-600 animate-pulse" />
+            <p className="text-xs font-semibold text-blue-900">
+              {incident.agencies.name} responding
+            </p>
+          </div>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+function EmptyState({ router }: any) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-8 text-center border-2 border-dashed border-blue-200"
+    >
+      <motion.div
+        animate={{ 
+          rotate: [0, 10, -10, 0],
+          scale: [1, 1.1, 1]
+        }}
+        transition={{ duration: 2, repeat: Infinity, repeatDelay: 2 }}
+        className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full mx-auto mb-4 flex items-center justify-center shadow-xl"
+      >
+        <Shield className="h-10 w-10 text-white" />
+      </motion.div>
+      
+      <h3 className="text-xl font-black text-gray-900 mb-2">
+        All Clear! 🎉
+      </h3>
+      <p className="text-gray-600 mb-6 leading-relaxed">
+        You haven't reported any emergencies yet.<br/>
+        We hope it stays that way!
+      </p>
+      
+      <motion.button
+        whileTap={{ scale: 0.95 }}
+        onClick={() => {
+          router.push('/report');
+          haptics.medium();
+        }}
+        className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
+      >
+        <Plus className="h-5 w-5" />
+        Report Emergency
+      </motion.button>
+    </motion.div>
+  );
+}
+
+function SafetyTipCard({ icon: Icon, title, tip, gradient }: any) {
+  return (
+    <motion.div
+      whileHover={{ y: -4 }}
+      className={`flex-shrink-0 w-64 bg-gradient-to-br ${gradient} rounded-2xl p-5 text-white shadow-xl relative overflow-hidden`}
+    >
+      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
+      <div className="relative">
+        <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4">
+          <Icon className="h-6 w-6" />
+        </div>
+        <h4 className="font-black text-lg mb-2">{title}</h4>
+        <p className="text-sm opacity-90 leading-relaxed">{tip}</p>
+      </div>
+    </motion.div>
+  );
+}
+
+function BottomNav({ activeTab, setActiveTab, router }: any) {
+  const tabs = [
+    { id: 'home', icon: Home, label: 'Home', action: () => {} },
+    { id: 'reports', icon: FileText, label: 'Reports', action: () => router.push('/dashboard/incidents') },
+    { id: 'help', icon: HelpCircle, label: 'Help', action: () => router.push('/help') },
+    { id: 'profile', icon: User, label: 'Profile', action: () => router.push('/dashboard/settings') },
+  ];
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 pb-safe z-40">
+      <div className="grid grid-cols-4 h-16">
+        {tabs.map((tab) => (
+          <motion.button
+            key={tab.id}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => {
+              setActiveTab(tab.id);
+              tab.action();
+              haptics.light();
+            }}
+            className={`relative flex flex-col items-center justify-center gap-1 transition-colors ${
+              activeTab === tab.id ? 'text-red-600' : 'text-gray-400'
+            }`}
+          >
+            <tab.icon className="h-6 w-6" />
+            <span className="text-xs font-semibold">{tab.label}</span>
+            {activeTab === tab.id && (
+              <motion.div
+                layoutId="activeTab"
+                className="absolute bottom-0 left-0 right-0 h-1 bg-red-600 rounded-t-full"
+              />
+            )}
+          </motion.button>
+        ))}
       </div>
     </div>
   );
 }
 
-// HELPER COMPONENTS
-
-function EmergencyContact({
-  icon,
-  name,
-  number,
-  color,
-}: {
-  icon: React.ReactNode;
-  name: string;
-  number: string;
-  color: 'blue' | 'orange' | 'green' | 'purple';
-}) {
-  const colors = {
-    blue: 'from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700',
-    orange: 'from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700',
-    green: 'from-green-500 to-green-600 hover:from-green-600 hover:to-green-700',
-    purple: 'from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700',
-  };
+function SlideMenu({ open, onClose, router, session }: any) {
+  const menuItems = [
+    { icon: Home, label: 'Dashboard', action: () => router.push('/dashboard') },
+    { icon: FileText, label: 'My Reports', action: () => router.push('/dashboard/incidents') },
+    { icon: Bell, label: 'Notifications', action: () => router.push('/dashboard/notifications') },
+    { icon: User, label: 'Profile', action: () => router.push('/dashboard/settings') },
+    { icon: Settings, label: 'Settings', action: () => router.push('/dashboard/settings') },
+    { icon: HelpCircle, label: 'Help & Support', action: () => router.push('/help') },
+  ];
 
   return (
-    <button
-      onClick={() => (window.location.href = `tel:${number}`)}
-      className={`
-        bg-gradient-to-br ${colors[color]}
-        group transform rounded-xl
-        p-4 text-white
-        shadow-lg transition-all duration-200
-        hover:scale-105 hover:shadow-xl
-        active:scale-95
-      `}
-    >
-      <div className="flex flex-col items-center gap-2">
-        <div className="rounded-full bg-white/20 p-2 transition-colors group-hover:bg-white/30">
-          {icon}
-        </div>
-        <div className="text-center">
-          <p className="text-sm font-bold">{name}</p>
-          <p className="text-xs opacity-90">{number}</p>
-        </div>
-      </div>
-    </button>
-  );
-}
+    <AnimatePresence>
+      {open && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+          />
 
-function StatsCard({
-  icon,
-  label,
-  value,
-  trend,
-  color,
-  pulse,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: number;
-  trend: number | null;
-  color: 'blue' | 'orange' | 'green';
-  pulse?: boolean;
-}) {
-  const colors = {
-    blue: 'from-blue-500 to-blue-600',
-    orange: 'from-orange-500 to-orange-600',
-    green: 'from-green-500 to-green-600',
-  };
-
-  return (
-    <Card variant="elevated" hoverable>
-      <CardContent className="p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <div
-            className={`
-            bg-gradient-to-br ${colors[color]}
-            rounded-xl p-3 text-white
-            shadow-lg
-            ${pulse ? 'animate-pulse' : ''}
-          `}
+          {/* Menu Panel */}
+          <motion.div
+            initial={{ x: -300 }}
+            animate={{ x: 0 }}
+            exit={{ x: -300 }}
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            className="fixed left-0 top-0 bottom-0 w-80 bg-white z-50 shadow-2xl"
           >
-            {icon}
-          </div>
-          {trend !== null && (
-            <div
-              className={`flex items-center gap-1 text-sm font-semibold ${
-                trend > 0 ? 'text-green-600' : 'text-red-600'
-              }`}
-            >
-              <TrendingUp className="h-4 w-4" />
-              {trend > 0 ? '+' : ''}
-              {trend}%
-            </div>
-          )}
-        </div>
-        <div>
-          <p className="mb-1 text-sm text-gray-600">{label}</p>
-          <p className="text-4xl font-black text-gray-900">{value}</p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+            <div className="flex flex-col h-full">
+              
+              {/* Header */}
+              <div className="bg-gradient-to-br from-red-500 to-red-600 p-6 pb-8">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-white font-black text-xl">Menu</h2>
+                  <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    onClick={onClose}
+                    className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center"
+                  >
+                    <X className="h-5 w-5 text-white" />
+                  </motion.button>
+                </div>
+                
+                {/* User Info */}
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center text-white font-black text-xl">
+                    {session?.user?.name?.[0]?.toUpperCase() || 'U'}
+                  </div>
+                  <div>
+                    <p className="text-white font-bold text-lg">{session?.user?.name}</p>
+                    <p className="text-red-100 text-sm">{session?.user?.phone}</p>
+                  </div>
+                </div>
+              </div>
 
-function IncidentCard({ incident, router }: { incident: any; router: any }) {
-  const statusColors: Record<string, string> = {
-    REPORTED: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    DISPATCHED: 'bg-blue-100 text-blue-800 border-blue-200',
-    IN_PROGRESS: 'bg-purple-100 text-purple-800 border-purple-200',
-    RESOLVED: 'bg-green-100 text-green-800 border-green-200',
-    CLOSED: 'bg-gray-100 text-gray-800 border-gray-200',
-  };
+              {/* Menu Items */}
+              <div className="flex-1 p-4 space-y-2 overflow-y-auto">
+                {menuItems.map((item, index) => (
+                  <motion.button
+                    key={item.label}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      item.action();
+                      onClose();
+                      haptics.light();
+                    }}
+                    className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-gray-100 transition-colors group"
+                  >
+                    <div className="w-10 h-10 bg-gray-100 group-hover:bg-red-100 rounded-xl flex items-center justify-center transition-colors">
+                      <item.icon className="h-5 w-5 text-gray-600 group-hover:text-red-600 transition-colors" />
+                    </div>
+                    <span className="font-semibold text-gray-900">{item.label}</span>
+                    <ChevronRight className="h-5 w-5 text-gray-400 ml-auto group-hover:translate-x-1 transition-transform" />
+                  </motion.button>
+                ))}
+              </div>
 
-  const severityVariant: Record<string, 'critical' | 'high' | 'medium' | 'low'> = {
-    CRITICAL: 'critical',
-    HIGH: 'high',
-    MEDIUM: 'medium',
-    LOW: 'low',
-  };
-
-  return (
-    <Card
-      variant="elevated"
-      hoverable
-      clickable
-      onClick={() => router.push(`/dashboard/incidents/${incident.id}`)}
-    >
-      {/* Status bar */}
-      <div
-        className={`h-2 ${
-          incident.status === 'RESOLVED' || incident.status === 'CLOSED'
-            ? 'bg-green-500'
-            : incident.status === 'IN_PROGRESS'
-              ? 'bg-blue-500'
-              : incident.status === 'DISPATCHED'
-                ? 'bg-purple-500'
-                : 'bg-yellow-500'
-        }`}
-      />
-
-      <CardContent className="p-6">
-        <div className="mb-4 flex items-start justify-between">
-          <div className="flex-1">
-            <div className="mb-3 flex flex-wrap items-center gap-2">
-              <Badge variant={severityVariant[incident.severity] || 'default'} size="sm">
-                {incident.severity}
-              </Badge>
-              <Badge variant="default" size="sm">
-                {incident.category}
-              </Badge>
-              <span
-                className={`
-                rounded-full border-2 px-3 py-1 text-xs font-semibold
-                ${statusColors[incident.status] || statusColors.REPORTED}
-              `}
-              >
-                {incident.status}
-              </span>
-            </div>
-            <h3 className="mb-2 line-clamp-1 text-xl font-bold text-gray-900">
-              {incident.title || incident.description?.substring(0, 50) || 'Emergency Report'}
-            </h3>
-          </div>
-          <ChevronRight className="ml-4 h-6 w-6 flex-shrink-0 text-gray-400" />
-        </div>
-
-        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-          <div className="flex items-center gap-1">
-            <Clock className="h-4 w-4" />
-            <ClientOnly>
-              <span>{formatDistanceToNow(new Date(incident.createdAt), { addSuffix: true })}</span>
-            </ClientOnly>
-          </div>
-          {incident.region && (
-            <div className="flex items-center gap-1">
-              <MapPin className="h-4 w-4" />
-              <span>{incident.region}</span>
-            </div>
-          )}
-        </div>
-
-        {incident.assignedAgency && (
-          <div className="mt-4 rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50 to-blue-100 p-3">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-blue-600" />
-              <div>
-                <p className="text-sm font-semibold text-blue-900">
-                  Assigned to {incident.assignedAgency.name}
-                </p>
-                <p className="text-xs text-blue-700">Help is on the way</p>
+              {/* Logout Button */}
+              <div className="p-4 border-t border-gray-200">
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    router.push('/api/auth/signout');
+                    haptics.medium();
+                  }}
+                  className="w-full flex items-center justify-center gap-3 p-4 bg-red-50 text-red-600 rounded-2xl font-bold hover:bg-red-100 transition-colors"
+                >
+                  <LogOut className="h-5 w-5" />
+                  Sign Out
+                </motion.button>
               </div>
             </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }
 
-function SafetyTipCard({
-  icon,
-  title,
-  description,
-  color,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  color: 'orange' | 'red' | 'blue' | 'green';
-}) {
-  const colors = {
-    orange: 'from-orange-500 to-orange-600',
-    red: 'from-red-500 to-red-600',
-    blue: 'from-blue-500 to-blue-600',
-    green: 'from-green-500 to-green-600',
-  };
-
+function ReportModal({ open, onClose, router }: any) {
   return (
-    <Card variant="elevated" hoverable>
-      <CardContent className="p-6">
-        <div
-          className={`
-          inline-flex items-center justify-center
-          bg-gradient-to-br ${colors[color]}
-          mb-4 rounded-xl p-3 text-white
-          shadow-lg
-        `}
-        >
-          {icon}
-        </div>
-        <h3 className="mb-2 text-lg font-bold text-gray-900">{title}</h3>
-        <p className="leading-relaxed text-gray-600">{description}</p>
-      </CardContent>
-    </Card>
+    <AnimatePresence>
+      {open && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+          />
+
+          {/* Modal */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            className="fixed inset-x-4 top-1/2 -translate-y-1/2 bg-white rounded-3xl shadow-2xl z-50 max-w-md mx-auto"
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-black text-gray-900">Report Emergency</h3>
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={onClose}
+                  className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center"
+                >
+                  <X className="h-5 w-5 text-gray-600" />
+                </motion.button>
+              </div>
+
+              <p className="text-gray-600 mb-6">
+                Choose how you want to report your emergency:
+              </p>
+
+              <div className="space-y-3">
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    router.push('/report');
+                    onClose();
+                    haptics.medium();
+                  }}
+                  className="w-full flex items-center gap-4 p-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all group"
+                >
+                  <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                    <FileText className="h-6 w-6" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="font-bold text-lg">Fill Report Form</p>
+                    <p className="text-sm text-red-100">Provide detailed information</p>
+                  </div>
+                  <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </motion.button>
+
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    router.push('/report');
+                    onClose();
+                    haptics.medium();
+                  }}
+                  className="w-full flex items-center gap-4 p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all group"
+                >
+                  <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                    <Zap className="h-6 w-6" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="font-bold text-lg">Quick Report</p>
+                    <p className="text-sm text-blue-100">Fast emergency alert</p>
+                  </div>
+                  <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </motion.button>
+
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    window.location.href = 'tel:191';
+                    haptics.medium();
+                  }}
+                  className="w-full flex items-center gap-4 p-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all group"
+                >
+                  <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                    <Phone className="h-6 w-6" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="font-bold text-lg">Call 191</p>
+                    <p className="text-sm text-green-100">Direct voice call</p>
+                  </div>
+                  <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }
 
-function NavButton({
-  icon,
-  label,
-  active,
-  onClick,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  active?: boolean;
-  onClick?: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`
-        flex flex-col items-center justify-center gap-1
-        transition-all duration-200
-        ${active ? 'text-red-600' : 'text-gray-600 hover:text-gray-900'}
-      `}
-    >
-      <div
-        className={`
-        ${active ? 'scale-110' : 'scale-100'}
-        transition-transform duration-200
-      `}
-      >
-        {icon}
-      </div>
-      <span className="text-xs font-semibold">{label}</span>
-      {active && <div className="h-1 w-1 rounded-full bg-red-600" />}
-    </button>
-  );
+function formatTimeAgo(date: Date | string): string {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  const seconds = Math.floor((new Date().getTime() - dateObj.getTime()) / 1000);
+  if (seconds < 60) return 'Just now';
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+  return `${Math.floor(seconds / 86400)}d ago`;
 }

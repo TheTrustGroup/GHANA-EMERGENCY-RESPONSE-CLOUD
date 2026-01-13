@@ -155,6 +155,9 @@ const config: Config = {
           '100%': { transform: 'scale(1)', opacity: '1' },
         },
       },
+      padding: {
+        'safe': 'env(safe-area-inset-bottom)',
+      },
     },
   },
 
