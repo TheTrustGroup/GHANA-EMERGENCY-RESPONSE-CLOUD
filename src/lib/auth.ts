@@ -131,8 +131,9 @@ export const authOptions: NextAuthOptions = {
   },
 
   events: {
-    async signIn({ user, isNewUser }) {
-      if (isNewUser) {        // You can add additional logic here for new user registration
+    async signIn({ isNewUser }) {
+      if (isNewUser) {
+        // You can add additional logic here for new user registration
       }
     },
   },
