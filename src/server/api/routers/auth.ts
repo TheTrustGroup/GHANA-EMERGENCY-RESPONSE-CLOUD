@@ -9,7 +9,7 @@ import { createTRPCRouter, publicProcedure } from '@/server/api/trpc';
 import { hashPassword } from '@/lib/auth';
 import { formatGhanaPhone } from '@/server/db/utils';
 import { UserRole } from '@prisma/client';
-import crypto from 'crypto';
+// import crypto from 'crypto'; // TODO: Uncomment when implementing token generation
 
 export const authRouter = createTRPCRouter({
   register: publicProcedure
@@ -101,9 +101,9 @@ export const authRouter = createTRPCRouter({
         return { success: true, message: 'If an account exists, a reset link has been sent' };
       }
 
-      // Generate token
-      const _resetToken = crypto.randomBytes(32).toString('hex');
+      // Generate token (placeholder - will be implemented)
       // TODO: Store token in database
+      // const resetToken = crypto.randomBytes(32).toString('hex');
 
       // TODO: Send email
       return { success: true, message: 'If an account exists, a reset link has been sent' };

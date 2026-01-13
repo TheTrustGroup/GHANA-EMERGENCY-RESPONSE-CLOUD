@@ -45,7 +45,7 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
 /**
  * Request logging middleware
  */
-const loggingMiddleware = t.middleware(async ({ path, type, next }) => {
+const loggingMiddleware = t.middleware(async ({ path, type: _type, next }) => {
   const start = Date.now();
   const result = await next();
   const duration = Date.now() - start;
