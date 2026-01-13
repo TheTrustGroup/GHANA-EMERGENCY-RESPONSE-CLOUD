@@ -121,7 +121,7 @@ export const incidentsRouter = createTRPCRouter({
         status: IncidentStatus.REPORTED,
       },
       include: {
-        reportedBy: {
+        users: {
           select: {
             id: true,
             name: true,
