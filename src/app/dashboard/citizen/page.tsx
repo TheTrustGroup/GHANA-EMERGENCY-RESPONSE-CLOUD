@@ -23,7 +23,6 @@ import {
   ArrowRight,
   Menu,
   X,
-  TrendingUp,
   Activity,
   Zap,
   Settings,
