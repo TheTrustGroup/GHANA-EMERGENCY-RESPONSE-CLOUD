@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
         id: userId,
         name: data.name,
         phone: normalizedPhone,
-        email: data.email && data.email.trim() ? data.email.toLowerCase().trim() : null,
+        email: data.email && data.email.trim() ? data.email.toLowerCase().trim() : '',
         passwordHash,
         role: data.role,
         agencyId: data.agencyId || null,
