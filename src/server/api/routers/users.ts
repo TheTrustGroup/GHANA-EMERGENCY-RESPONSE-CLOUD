@@ -37,41 +37,39 @@ export const usersRouter = createTRPCRouter({
     return userWithoutPassword;
   }),
 
-  updateProfile: protectedProcedure
-    .input(updateProfileSchema)
-    .mutation(async ({ input, ctx }) => {
-      const updateData: any = {};
+  updateProfile: protectedProcedure.input(updateProfileSchema).mutation(async ({ input, ctx }) => {
+    const updateData: any = {};
 
-      if (input.name) updateData.name = input.name;
-      if (input.phone) updateData.phone = formatGhanaPhone(input.phone);
-      if (input.latitude !== undefined) updateData.latitude = input.latitude;
-      if (input.longitude !== undefined) updateData.longitude = input.longitude;
+    if (input.name) updateData.name = input.name;
+    if (input.phone) updateData.phone = formatGhanaPhone(input.phone);
+    if (input.latitude !== undefined) updateData.latitude = input.latitude;
+    if (input.longitude !== undefined) updateData.longitude = input.longitude;
 
-      const updated = await ctx.prisma.users.update({
-        where: { id: ctx.session.user.id },
-        data: updateData,
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          phone: true,
-          role: true,
-        },
-      });
+    const updated = await ctx.prisma.users.update({
+      where: { id: ctx.session.user.id },
+      data: updateData,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+      },
+    });
 
-      // Create audit log
-      await ctx.prisma.auditLog.create({
-        data: {
-          userId: ctx.session.user.id,
-          action: 'profile_updated',
-          entity: 'User',
-          entityId: ctx.session.user.id,
-          changes: updateData,
-        },
-      });
+    // Create audit log
+    await ctx.prisma.audit_logs.create({
+      data: {
+        userId: ctx.session.user.id,
+        action: 'profile_updated',
+        entity: 'User',
+        entityId: ctx.session.user.id,
+        changes: updateData,
+      },
+    });
 
-      return updated;
-    }),
+    return updated;
+  }),
 
   getByAgency: protectedProcedure
     .input(z.object({ agencyId: z.string().cuid() }))
@@ -130,7 +128,7 @@ export const usersRouter = createTRPCRouter({
       });
 
       // Create audit log
-      await ctx.prisma.auditLog.create({
+      await ctx.prisma.audit_logs.create({
         data: {
           userId: ctx.session.user.id,
           action: 'user_role_updated',
@@ -170,7 +168,7 @@ export const usersRouter = createTRPCRouter({
       });
 
       // Create audit log
-      await ctx.prisma.auditLog.create({
+      await ctx.prisma.audit_logs.create({
         data: {
           userId: ctx.session.user.id,
           action: 'user_deactivated',
@@ -211,7 +209,7 @@ export const usersRouter = createTRPCRouter({
 
     if (role === 'RESPONDER') {
       // Get responder-specific stats
-      const assignments = await ctx.prisma.dispatchAssignment.findMany({
+      const assignments = await ctx.prisma.dispatch_assignments.findMany({
         where: {
           responderId: userId,
         },
@@ -224,7 +222,7 @@ export const usersRouter = createTRPCRouter({
         },
       });
 
-      const completedToday = assignments.filter(a => {
+      const completedToday = assignments.filter((a) => {
         if (a.status !== 'COMPLETED' || !a.completedAt) return false;
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -235,15 +233,19 @@ export const usersRouter = createTRPCRouter({
       const totalDistance = assignments.length * 5; // Placeholder
 
       // Calculate average response time
-      const completedAssignments = assignments.filter(a => a.status === 'COMPLETED' && a.completedAt && a.dispatchedAt);
-      const avgResponseTime = completedAssignments.length > 0
-        ? Math.round(
-            completedAssignments.reduce((sum, a) => {
-              const responseTime = new Date(a.completedAt!).getTime() - new Date(a.dispatchedAt).getTime();
-              return sum + (responseTime / 60000); // Convert to minutes
-            }, 0) / completedAssignments.length
-          )
-        : 0;
+      const completedAssignments = assignments.filter(
+        (a) => a.status === 'COMPLETED' && a.completedAt && a.dispatchedAt
+      );
+      const avgResponseTime =
+        completedAssignments.length > 0
+          ? Math.round(
+              completedAssignments.reduce((sum, a) => {
+                const responseTime =
+                  new Date(a.completedAt!).getTime() - new Date(a.dispatchedAt).getTime();
+                return sum + responseTime / 60000; // Convert to minutes
+              }, 0) / completedAssignments.length
+            )
+          : 0;
 
       return {
         completedToday,
@@ -263,8 +265,10 @@ export const usersRouter = createTRPCRouter({
 
       return {
         totalReports: incidents.length,
-        activeReports: incidents.filter(i => i.status !== 'RESOLVED' && i.status !== 'CLOSED').length,
-        resolvedReports: incidents.filter(i => i.status === 'RESOLVED' || i.status === 'CLOSED').length,
+        activeReports: incidents.filter((i) => i.status !== 'RESOLVED' && i.status !== 'CLOSED')
+          .length,
+        resolvedReports: incidents.filter((i) => i.status === 'RESOLVED' || i.status === 'CLOSED')
+          .length,
       };
     }
 
@@ -275,4 +279,3 @@ export const usersRouter = createTRPCRouter({
     };
   }),
 });
-

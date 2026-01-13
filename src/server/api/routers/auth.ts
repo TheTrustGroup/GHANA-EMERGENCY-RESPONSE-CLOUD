@@ -65,7 +65,7 @@ export const authRouter = createTRPCRouter({
       });
 
       // Create audit log
-      await ctx.prisma.auditLog.create({
+      await ctx.prisma.audit_logs.create({
         data: {
           userId: user.id,
           action: 'user_registered',

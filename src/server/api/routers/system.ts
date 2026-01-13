@@ -83,7 +83,7 @@ export const systemRouter = createTRPCRouter({
     .query(async ({ input, ctx }) => {
       const now = new Date();
       const startDate = new Date(now);
-      
+
       if (input.timeRange === '24h') {
         startDate.setHours(now.getHours() - 24);
       } else if (input.timeRange === '7d') {
@@ -93,7 +93,7 @@ export const systemRouter = createTRPCRouter({
       }
 
       // Get active incidents
-      const activeIncidents = await ctx.prisma.incident.count({
+      const activeIncidents = await ctx.prisma.incidents.count({
         where: {
           status: {
             in: ['REPORTED', 'DISPATCHED', 'IN_PROGRESS'],
@@ -102,7 +102,7 @@ export const systemRouter = createTRPCRouter({
       });
 
       // Get critical incidents
-      const critical = await ctx.prisma.incident.count({
+      const critical = await ctx.prisma.incidents.count({
         where: {
           severity: 'CRITICAL',
           status: {
@@ -111,7 +111,7 @@ export const systemRouter = createTRPCRouter({
         },
       });
 
-      const high = await ctx.prisma.incident.count({
+      const high = await ctx.prisma.incidents.count({
         where: {
           severity: 'HIGH',
           status: {
@@ -120,7 +120,7 @@ export const systemRouter = createTRPCRouter({
         },
       });
 
-      const medium = await ctx.prisma.incident.count({
+      const medium = await ctx.prisma.incidents.count({
         where: {
           severity: 'MEDIUM',
           status: {
@@ -129,7 +129,7 @@ export const systemRouter = createTRPCRouter({
         },
       });
 
-      const low = await ctx.prisma.incident.count({
+      const low = await ctx.prisma.incidents.count({
         where: {
           severity: 'LOW',
           status: {
@@ -155,15 +155,15 @@ export const systemRouter = createTRPCRouter({
       });
 
       // Get agencies
-      const totalAgencies = await ctx.prisma.agency.count();
-      const onlineAgencies = await ctx.prisma.agency.count({
+      const totalAgencies = await ctx.prisma.agencies.count();
+      const onlineAgencies = await ctx.prisma.agencies.count({
         where: {
           isActive: true,
         },
       });
 
       // Calculate average response time
-      const incidentsWithResponseTime = await ctx.prisma.incident.findMany({
+      const incidentsWithResponseTime = await ctx.prisma.incidents.findMany({
         where: {
           responseTime: { not: null },
           createdAt: { gte: startDate },
@@ -176,10 +176,8 @@ export const systemRouter = createTRPCRouter({
       const avgResponseTime =
         incidentsWithResponseTime.length > 0
           ? Math.round(
-              incidentsWithResponseTime.reduce(
-                (sum, inc) => sum + (inc.responseTime || 0),
-                0
-              ) / incidentsWithResponseTime.length
+              incidentsWithResponseTime.reduce((sum, inc) => sum + (inc.responseTime || 0), 0) /
+                incidentsWithResponseTime.length
             )
           : 0;
 
@@ -189,11 +187,11 @@ export const systemRouter = createTRPCRouter({
         input.timeRange === '24h'
           ? 24 * 60 * 60 * 1000
           : input.timeRange === '7d'
-          ? 7 * 24 * 60 * 60 * 1000
-          : 30 * 24 * 60 * 60 * 1000;
+            ? 7 * 24 * 60 * 60 * 1000
+            : 30 * 24 * 60 * 60 * 1000;
       prevStartDate.setTime(prevStartDate.getTime() - periodDiff);
 
-      const prevActiveIncidents = await ctx.prisma.incident.count({
+      const prevActiveIncidents = await ctx.prisma.incidents.count({
         where: {
           status: {
             in: ['REPORTED', 'DISPATCHED', 'IN_PROGRESS'],
@@ -207,9 +205,7 @@ export const systemRouter = createTRPCRouter({
 
       const incidentChange =
         prevActiveIncidents > 0
-          ? Math.round(
-              ((activeIncidents - prevActiveIncidents) / prevActiveIncidents) * 100
-            )
+          ? Math.round(((activeIncidents - prevActiveIncidents) / prevActiveIncidents) * 100)
           : 0;
 
       // Generate trends data (last 7 days)
@@ -220,7 +216,7 @@ export const systemRouter = createTRPCRouter({
         const dayStart = new Date(date.setHours(0, 0, 0, 0));
         const dayEnd = new Date(date.setHours(23, 59, 59, 999));
 
-        const count = await ctx.prisma.incident.count({
+        const count = await ctx.prisma.incidents.count({
           where: {
             createdAt: {
               gte: dayStart,
@@ -262,7 +258,7 @@ export const systemRouter = createTRPCRouter({
       });
 
       // Unread alerts (notifications)
-      const unreadAlerts = await ctx.prisma.notification.count({
+      const unreadAlerts = await ctx.prisma.notifications.count({
         where: {
           isRead: false,
           type: 'SYSTEM_ALERT',

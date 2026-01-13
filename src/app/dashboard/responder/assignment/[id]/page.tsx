@@ -59,7 +59,7 @@ export default function AssignmentDetailPage() {
     );
   }
 
-  const incident = currentAssignment.incident;
+  const incident = currentAssignment.incidents;
 
   const userLocation = location
     ? { latitude: location.latitude, longitude: location.longitude }

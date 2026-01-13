@@ -21,7 +21,7 @@ export const agenciesRouter = createTRPCRouter({
       'agencies.getAll',
       {},
       async () => {
-        const agencies = await ctx.prisma.agency.findMany({
+        const agencies = await ctx.prisma.agencies.findMany({
           where: { isActive: true },
           select: {
             id: true,
@@ -44,7 +44,7 @@ export const agenciesRouter = createTRPCRouter({
   getById: publicProcedure
     .input(z.object({ id: z.string().cuid() }))
     .query(async ({ input, ctx }) => {
-      const agency = await ctx.prisma.agency.findUnique({
+      const agency = await ctx.prisma.agencies.findUnique({
         where: { id: input.id },
         include: {
           _count: {
@@ -67,12 +67,12 @@ export const agenciesRouter = createTRPCRouter({
     }),
 
   create: adminProcedure.input(createAgencySchema).mutation(async ({ input, ctx }) => {
-    const agency = await ctx.prisma.agency.create({
+    const agency = await ctx.prisma.agencies.create({
       data: input,
     });
 
     // Create audit log
-    await ctx.prisma.auditLog.create({
+    await ctx.prisma.audit_logs.create({
       data: {
         userId: ctx.session.user.id,
         action: 'agency_created',
@@ -96,7 +96,7 @@ export const agenciesRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const agency = await ctx.prisma.agency.findUnique({
+      const agency = await ctx.prisma.agencies.findUnique({
         where: { id: input.id },
       });
 
@@ -107,13 +107,13 @@ export const agenciesRouter = createTRPCRouter({
         });
       }
 
-      const updated = await ctx.prisma.agency.update({
+      const updated = await ctx.prisma.agencies.update({
         where: { id: input.id },
         data: input.data,
       });
 
       // Create audit log
-      await ctx.prisma.auditLog.create({
+      await ctx.prisma.audit_logs.create({
         data: {
           userId: ctx.session.user.id,
           action: 'agency_updated',
@@ -132,7 +132,7 @@ export const agenciesRouter = createTRPCRouter({
   getStats: protectedProcedure
     .input(z.object({ id: z.string().cuid() }))
     .query(async ({ input, ctx }) => {
-      const agency = await ctx.prisma.agency.findUnique({
+      const agency = await ctx.prisma.agencies.findUnique({
         where: { id: input.id },
       });
 
@@ -198,7 +198,7 @@ export const agenciesRouter = createTRPCRouter({
   getAgencyStats: protectedProcedure
     .input(z.object({ agencyId: z.string().cuid() }))
     .query(async ({ input, ctx }) => {
-      const agency = await ctx.prisma.agency.findUnique({
+      const agency = await ctx.prisma.agencies.findUnique({
         where: { id: input.agencyId },
         select: {
           id: true,

@@ -24,13 +24,13 @@ export const notificationsRouter = createTRPCRouter({
         where.isRead = false;
       }
 
-      const notifications = await ctx.prisma.notification.findMany({
+      const notifications = await ctx.prisma.notifications.findMany({
         where,
         orderBy: { createdAt: 'desc' },
         take: input.limit,
       });
 
-      const unreadCount = await ctx.prisma.notification.count({
+      const unreadCount = await ctx.prisma.notifications.count({
         where: {
           userId: ctx.session.user.id,
           isRead: false,
@@ -46,7 +46,7 @@ export const notificationsRouter = createTRPCRouter({
   markAsRead: protectedProcedure
     .input(z.object({ id: z.string().cuid() }))
     .mutation(async ({ input, ctx }) => {
-      const notification = await ctx.prisma.notification.findUnique({
+      const notification = await ctx.prisma.notifications.findUnique({
         where: { id: input.id },
       });
 
@@ -64,7 +64,7 @@ export const notificationsRouter = createTRPCRouter({
         });
       }
 
-      const updated = await ctx.prisma.notification.update({
+      const updated = await ctx.prisma.notifications.update({
         where: { id: input.id },
         data: { isRead: true },
       });
@@ -73,7 +73,7 @@ export const notificationsRouter = createTRPCRouter({
     }),
 
   markAllAsRead: protectedProcedure.mutation(async ({ ctx }) => {
-      await ctx.prisma.notification.updateMany({
+      await ctx.prisma.notifications.updateMany({
         where: {
           userId: ctx.session.user.id,
           isRead: false,
@@ -87,7 +87,7 @@ export const notificationsRouter = createTRPCRouter({
     }),
 
   getUnreadCount: protectedProcedure.query(async ({ ctx }) => {
-      const count = await ctx.prisma.notification.count({
+      const count = await ctx.prisma.notifications.count({
         where: {
           userId: ctx.session.user.id,
           isRead: false,

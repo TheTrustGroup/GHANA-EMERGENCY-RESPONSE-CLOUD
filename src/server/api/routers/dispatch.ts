@@ -12,143 +12,138 @@ import {
   completeDispatchSchema,
 } from '@/lib/validations/dispatch';
 import { canDispatchToAgency } from '@/lib/auth-utils';
-import {
-  createNotification,
-  NotificationType,
-} from '@/lib/notifications/notification-service';
+import { createNotification, NotificationType } from '@/lib/notifications/notification-service';
 import { broadcastIncidentUpdate } from '@/lib/realtime/pusher-server';
 
 export const dispatchRouter = createTRPCRouter({
-  create: dispatcherProcedure
-    .input(createDispatchSchema)
-    .mutation(async ({ input, ctx }) => {
-      // Verify incident exists
-      const incident = await ctx.prisma.incident.findUnique({
-        where: { id: input.incidentId },
+  create: dispatcherProcedure.input(createDispatchSchema).mutation(async ({ input, ctx }) => {
+    // Verify incident exists
+    const incident = await ctx.prisma.incidents.findUnique({
+      where: { id: input.incidentId },
+    });
+
+    if (!incident) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Incident not found',
+      });
+    }
+
+    // Verify agency exists
+    const agency = await ctx.prisma.agencies.findUnique({
+      where: { id: input.agencyId },
+    });
+
+    if (!agency || !agency.isActive) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Agency not found or inactive',
+      });
+    }
+
+    // Check dispatch permissions
+    if (!canDispatchToAgency(ctx.session.user, input.agencyId)) {
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'You do not have permission to dispatch to this agency',
+      });
+    }
+
+    // Verify responder if provided
+    if (input.responderId) {
+      const responder = await ctx.prisma.users.findUnique({
+        where: { id: input.responderId },
       });
 
-      if (!incident) {
+      if (!responder || responder.role !== 'RESPONDER' || responder.agencyId !== input.agencyId) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Incident not found',
+          code: 'BAD_REQUEST',
+          message: 'Invalid responder for this agency',
         });
       }
+    }
 
-      // Verify agency exists
-      const agency = await ctx.prisma.agency.findUnique({
-        where: { id: input.agencyId },
-      });
-
-      if (!agency || !agency.isActive) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Agency not found or inactive',
-        });
-      }
-
-      // Check dispatch permissions
-      if (!canDispatchToAgency(ctx.session.user, input.agencyId)) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'You do not have permission to dispatch to this agency',
-        });
-      }
-
-      // Verify responder if provided
-      if (input.responderId) {
-        const responder = await ctx.prisma.users.findUnique({
-          where: { id: input.responderId },
-        });
-
-        if (!responder || responder.role !== 'RESPONDER' || responder.agencyId !== input.agencyId) {
-          throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message: 'Invalid responder for this agency',
-          });
-        }
-      }
-
-      const dispatch = await ctx.prisma.dispatchAssignment.create({
-        data: {
-          incidentId: input.incidentId,
-          agencyId: input.agencyId,
-          responderId: input.responderId!,
-          priority: input.priority,
-          dispatchNotes: input.notes || undefined,
-          status: 'DISPATCHED',
-        },
-        include: {
-          incident: {
-            select: {
-              id: true,
-              title: true,
-              severity: true,
-              latitude: true,
-              longitude: true,
-            },
-          },
-          agency: {
-            select: { id: true, name: true },
-          },
-          responder: {
-            select: { id: true, name: true, email: true },
+    const dispatch = await ctx.prisma.dispatch_assignments.create({
+      data: {
+        incidentId: input.incidentId,
+        agencyId: input.agencyId,
+        responderId: input.responderId!,
+        priority: input.priority,
+        dispatchNotes: input.notes || undefined,
+        status: 'DISPATCHED',
+      },
+      include: {
+        incident: {
+          select: {
+            id: true,
+            title: true,
+            severity: true,
+            latitude: true,
+            longitude: true,
           },
         },
-      });
-
-      // Create audit log
-      await ctx.prisma.auditLog.create({
-        data: {
-          userId: ctx.session.user.id,
-          action: 'dispatch_created',
-          entity: 'DispatchAssignment',
-          entityId: dispatch.id,
-          changes: { incidentId: input.incidentId, agencyId: input.agencyId },
+        agency: {
+          select: { id: true, name: true },
         },
-      });
-
-      // Notify responder if assigned
-      if (dispatch.responder) {
-        await createNotification(dispatch.responder.id, {
-          type: NotificationType.DISPATCH_ASSIGNMENT,
-          title: 'New Dispatch Assignment',
-          message: `You've been assigned to: ${dispatch.incident.title}`,
-          relatedEntityType: 'dispatch',
-          relatedEntityId: dispatch.id,
-          priority: input.priority >= 4 ? 'critical' : 'high',
-        });
-      }
-
-      // Notify agency admin
-      const agencyAdmin = await ctx.prisma.users.findFirst({
-        where: {
-          agencyId: input.agencyId,
-          role: 'AGENCY_ADMIN',
+        responder: {
+          select: { id: true, name: true, email: true },
         },
+      },
+    });
+
+    // Create audit log
+    await ctx.prisma.audit_logs.create({
+      data: {
+        userId: ctx.session.user.id,
+        action: 'dispatch_created',
+        entity: 'DispatchAssignment',
+        entityId: dispatch.id,
+        changes: { incidentId: input.incidentId, agencyId: input.agencyId },
+      },
+    });
+
+    // Notify responder if assigned
+    if (dispatch.responder) {
+      await createNotification(dispatch.responder.id, {
+        type: NotificationType.DISPATCH_ASSIGNMENT,
+        title: 'New Dispatch Assignment',
+        message: `You've been assigned to: ${dispatch.incident.title}`,
+        relatedEntityType: 'dispatch',
+        relatedEntityId: dispatch.id,
+        priority: input.priority >= 4 ? 'critical' : 'high',
       });
+    }
 
-      if (agencyAdmin) {
-        await createNotification(agencyAdmin.id, {
-          type: NotificationType.DISPATCH_ASSIGNMENT,
-          title: 'New Dispatch Assignment',
-          message: `Incident "${dispatch.incident.title}" assigned to your agency`,
-          relatedEntityType: 'dispatch',
-          relatedEntityId: dispatch.id,
-          priority: 'normal',
-        });
-      }
+    // Notify agency admin
+    const agencyAdmin = await ctx.prisma.users.findFirst({
+      where: {
+        agencyId: input.agencyId,
+        role: 'AGENCY_ADMIN',
+      },
+    });
 
-      // Update incident status to DISPATCHED
-      await ctx.prisma.incident.update({
-        where: { id: input.incidentId },
-        data: {
-          assignedAgencyId: input.agencyId,
-          status: 'DISPATCHED',
-        },
+    if (agencyAdmin) {
+      await createNotification(agencyAdmin.id, {
+        type: NotificationType.DISPATCH_ASSIGNMENT,
+        title: 'New Dispatch Assignment',
+        message: `Incident "${dispatch.incident.title}" assigned to your agency`,
+        relatedEntityType: 'dispatch',
+        relatedEntityId: dispatch.id,
+        priority: 'normal',
       });
+    }
 
-      return dispatch;
-    }),
+    // Update incident status to DISPATCHED
+    await ctx.prisma.incidents.update({
+      where: { id: input.incidentId },
+      data: {
+        assignedAgencyId: input.agencyId,
+        status: 'DISPATCHED',
+      },
+    });
+
+    return dispatch;
+  }),
 
   assign: dispatcherProcedure
     .input(
@@ -160,7 +155,7 @@ export const dispatchRouter = createTRPCRouter({
     )
     .mutation(async ({ input, ctx }) => {
       // Verify incident exists
-      const incident = await ctx.prisma.incident.findUnique({
+      const incident = await ctx.prisma.incidents.findUnique({
         where: { id: input.incidentId },
       });
 
@@ -172,7 +167,7 @@ export const dispatchRouter = createTRPCRouter({
       }
 
       // Verify agency exists
-      const agency = await ctx.prisma.agency.findUnique({
+      const agency = await ctx.prisma.agencies.findUnique({
         where: { id: input.agencyId },
       });
 
@@ -184,7 +179,7 @@ export const dispatchRouter = createTRPCRouter({
       }
 
       // Update incident
-      const updated = await ctx.prisma.incident.update({
+      const updated = await ctx.prisma.incidents.update({
         where: { id: input.incidentId },
         data: {
           assignedAgencyId: input.agencyId,
@@ -196,7 +191,7 @@ export const dispatchRouter = createTRPCRouter({
       // Note: responderId is required by Prisma, but we don't have one yet
       // We'll use a placeholder that will be updated when a responder accepts
       const systemResponderId = 'system-responder-placeholder';
-      const dispatch = await ctx.prisma.dispatchAssignment.create({
+      const dispatch = await ctx.prisma.dispatch_assignments.create({
         data: {
           incidentId: input.incidentId,
           agencyId: input.agencyId,
@@ -235,7 +230,7 @@ export const dispatchRouter = createTRPCRouter({
   accept: protectedProcedure
     .input(z.object({ id: z.string().cuid() }))
     .mutation(async ({ input, ctx }) => {
-      const dispatch = await ctx.prisma.dispatchAssignment.findUnique({
+      const dispatch = await ctx.prisma.dispatch_assignments.findUnique({
         where: { id: input.id },
       });
 
@@ -253,7 +248,7 @@ export const dispatchRouter = createTRPCRouter({
         });
       }
 
-      const updated = await ctx.prisma.dispatchAssignment.update({
+      const updated = await ctx.prisma.dispatch_assignments.update({
         where: { id: input.id },
         data: {
           status: 'ACCEPTED',
@@ -262,7 +257,7 @@ export const dispatchRouter = createTRPCRouter({
       });
 
       // Create audit log
-      await ctx.prisma.auditLog.create({
+      await ctx.prisma.audit_logs.create({
         data: {
           userId: ctx.session.user.id,
           action: 'dispatch_accepted',
@@ -282,7 +277,7 @@ export const dispatchRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const dispatch = await ctx.prisma.dispatchAssignment.findUnique({
+      const dispatch = await ctx.prisma.dispatch_assignments.findUnique({
         where: { id: input.id },
       });
 
@@ -300,7 +295,7 @@ export const dispatchRouter = createTRPCRouter({
         });
       }
 
-      const updated = await ctx.prisma.dispatchAssignment.update({
+      const updated = await ctx.prisma.dispatch_assignments.update({
         where: { id: input.id },
         data: {
           currentLatitude: input.latitude,
@@ -319,7 +314,7 @@ export const dispatchRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const dispatch = await ctx.prisma.dispatchAssignment.findUnique({
+      const dispatch = await ctx.prisma.dispatch_assignments.findUnique({
         where: { id: input.id },
       });
 
@@ -337,7 +332,7 @@ export const dispatchRouter = createTRPCRouter({
         });
       }
 
-      const updated = await ctx.prisma.dispatchAssignment.update({
+      const updated = await ctx.prisma.dispatch_assignments.update({
         where: { id: input.id },
         data: {
           status: 'COMPLETED',
@@ -347,7 +342,7 @@ export const dispatchRouter = createTRPCRouter({
       });
 
       // Create audit log
-      await ctx.prisma.auditLog.create({
+      await ctx.prisma.audit_logs.create({
         data: {
           userId: ctx.session.user.id,
           action: 'dispatch_completed',
@@ -362,16 +357,16 @@ export const dispatchRouter = createTRPCRouter({
   getByIncident: protectedProcedure
     .input(z.object({ incidentId: z.string().cuid() }))
     .query(async ({ input, ctx }) => {
-      const dispatches = await ctx.prisma.dispatchAssignment.findMany({
+      const dispatches = await ctx.prisma.dispatch_assignments.findMany({
         where: { incidentId: input.incidentId },
         include: {
-          agency: {
+          agencies: {
             select: { id: true, name: true, type: true },
           },
-          responder: {
+          users: {
             select: { id: true, name: true, email: true },
           },
-          incident: {
+          incidents: {
             select: { id: true, title: true },
           },
         },
@@ -382,14 +377,14 @@ export const dispatchRouter = createTRPCRouter({
     }),
 
   getAllActive: dispatcherProcedure.query(async ({ ctx }) => {
-    const dispatches = await ctx.prisma.dispatchAssignment.findMany({
+    const dispatches = await ctx.prisma.dispatch_assignments.findMany({
       where: {
         status: {
           notIn: ['COMPLETED'],
         },
       },
       include: {
-        incident: {
+        incidents: {
           select: {
             id: true,
             title: true,
@@ -399,10 +394,10 @@ export const dispatchRouter = createTRPCRouter({
             longitude: true,
           },
         },
-        agency: {
+        agencies: {
           select: { id: true, name: true, type: true },
         },
-        responder: {
+        users: {
           select: {
             id: true,
             name: true,
@@ -441,7 +436,7 @@ export const dispatchRouter = createTRPCRouter({
       // Get current dispatch status for each responder
       const responderStatuses = await Promise.all(
         responders.map(async (responder) => {
-          const activeDispatch = await ctx.prisma.dispatchAssignment.findFirst({
+          const activeDispatch = await ctx.prisma.dispatch_assignments.findFirst({
             where: {
               responderId: responder.id,
               status: {
@@ -482,7 +477,7 @@ export const dispatchRouter = createTRPCRouter({
       });
     }
 
-    const assignment = await ctx.prisma.dispatchAssignment.findFirst({
+    const assignment = await ctx.prisma.dispatch_assignments.findFirst({
       where: {
         responderId: ctx.session.user.id,
         status: {
@@ -490,7 +485,7 @@ export const dispatchRouter = createTRPCRouter({
         },
       },
       include: {
-        incident: {
+        incidents: {
           select: {
             id: true,
             title: true,
@@ -506,7 +501,7 @@ export const dispatchRouter = createTRPCRouter({
             mediaUrls: true,
           },
         },
-        agency: {
+        agencies: {
           select: {
             id: true,
             name: true,
@@ -530,12 +525,12 @@ export const dispatchRouter = createTRPCRouter({
       });
     }
 
-    const assignments = await ctx.prisma.dispatchAssignment.findMany({
+    const assignments = await ctx.prisma.dispatch_assignments.findMany({
       where: {
         responderId: ctx.session.user.id,
       },
       include: {
-        incident: {
+        incidents: {
           select: {
             id: true,
             title: true,
@@ -550,7 +545,7 @@ export const dispatchRouter = createTRPCRouter({
             createdAt: true,
           },
         },
-        agency: {
+        agencies: {
           select: {
             id: true,
             name: true,
@@ -562,18 +557,18 @@ export const dispatchRouter = createTRPCRouter({
       },
     });
 
-    const active = assignments.find(a => 
+    const active = assignments.find((a) =>
       ['DISPATCHED', 'ACCEPTED', 'EN_ROUTE', 'ARRIVED'].includes(a.status)
     );
 
-    const completedToday = assignments.filter(a => {
+    const completedToday = assignments.filter((a) => {
       if (a.status !== 'COMPLETED' || !a.completedAt) return false;
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       return new Date(a.completedAt) >= today;
     }).length;
 
-    const completedThisWeek = assignments.filter(a => {
+    const completedThisWeek = assignments.filter((a) => {
       if (a.status !== 'COMPLETED' || !a.completedAt) return false;
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
@@ -590,14 +585,16 @@ export const dispatchRouter = createTRPCRouter({
 
   // Update assignment status (for responders)
   updateStatus: protectedProcedure
-    .input(z.object({
-      assignmentId: z.string().cuid(),
-      status: z.enum(['ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'COMPLETED']),
-      latitude: z.number().optional(),
-      longitude: z.number().optional(),
-    }))
+    .input(
+      z.object({
+        assignmentId: z.string().cuid(),
+        status: z.enum(['ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'COMPLETED']),
+        latitude: z.number().optional(),
+        longitude: z.number().optional(),
+      })
+    )
     .mutation(async ({ input, ctx }) => {
-      const assignment = await ctx.prisma.dispatchAssignment.findUnique({
+      const assignment = await ctx.prisma.dispatch_assignments.findUnique({
         where: { id: input.assignmentId },
         include: { incident: true },
       });
@@ -629,20 +626,20 @@ export const dispatchRouter = createTRPCRouter({
       } else if (input.status === 'ARRIVED') {
         updateData.arrivedAt = new Date();
         // Update incident status
-        await ctx.prisma.incident.update({
+        await ctx.prisma.incidents.update({
           where: { id: assignment.incidentId },
           data: { status: 'IN_PROGRESS' },
         });
       } else if (input.status === 'COMPLETED') {
         updateData.completedAt = new Date();
         // Update incident status
-        await ctx.prisma.incident.update({
+        await ctx.prisma.incidents.update({
           where: { id: assignment.incidentId },
           data: { status: 'RESOLVED', resolvedAt: new Date() },
         });
       }
 
-      const updated = await ctx.prisma.dispatchAssignment.update({
+      const updated = await ctx.prisma.dispatch_assignments.update({
         where: { id: input.assignmentId },
         data: updateData,
       });
@@ -662,8 +659,12 @@ export const dispatchRouter = createTRPCRouter({
       // Broadcast update
       try {
         await broadcastIncidentUpdate(assignment.incidentId, {
-          status: input.status === 'ARRIVED' ? 'IN_PROGRESS' : 
-                  input.status === 'COMPLETED' ? 'RESOLVED' : undefined,
+          status:
+            input.status === 'ARRIVED'
+              ? 'IN_PROGRESS'
+              : input.status === 'COMPLETED'
+                ? 'RESOLVED'
+                : undefined,
         });
       } catch (error) {
         console.error('Pusher broadcast error:', error);
@@ -672,4 +673,3 @@ export const dispatchRouter = createTRPCRouter({
       return updated;
     }),
 });
-

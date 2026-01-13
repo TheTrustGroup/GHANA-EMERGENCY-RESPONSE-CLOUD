@@ -73,7 +73,7 @@ export default function ResponderAssignmentsPage() {
       // Show notification
       toast({
         title: 'New Assignment',
-        description: latestPending.incident.title,
+        description: latestPending.incidents.title,
         duration: 10000,
       });
     }
@@ -137,7 +137,7 @@ export default function ResponderAssignmentsPage() {
               />
             ) : (
               activeAssignments.map((assignment) => {
-                const incident = assignment.incident;
+                const incident = assignment.incidents;
                 const distance = userLocation
                   ? calculateDistance(
                       userLocation.latitude,
@@ -163,8 +163,8 @@ export default function ResponderAssignmentsPage() {
                     severity={incident.severity}
                     status={assignment.status as any}
                     address={incident.address}
-                    district={assignment.incident.district}
-                    region={assignment.incident.region}
+                    district={assignment.incidents.district}
+                    region={assignment.incidents.region}
                     distance={distance}
                     eta={eta}
                     dispatchedAt={new Date(assignment.dispatchedAt)}
@@ -190,7 +190,7 @@ export default function ResponderAssignmentsPage() {
               />
             ) : (
               pendingAssignments.map((assignment) => {
-                const incident = assignment.incident;
+                const incident = assignment.incidents;
                 const isCritical = incident.severity === IncidentSeverity.CRITICAL;
 
                 return (
@@ -263,7 +263,7 @@ export default function ResponderAssignmentsPage() {
               />
             ) : (
               completedAssignments.map((assignment) => {
-                const incident = assignment.incident;
+                const incident = assignment.incidents;
                 return (
                   <AssignmentCard
                     key={assignment.id}
@@ -273,8 +273,8 @@ export default function ResponderAssignmentsPage() {
                     severity={incident.severity}
                     status="completed"
                     address={incident.address}
-                    district={assignment.incident.district}
-                    region={assignment.incident.region}
+                    district={assignment.incidents.district}
+                    region={assignment.incidents.region}
                     dispatchedAt={new Date(assignment.dispatchedAt)}
                     acceptedAt={assignment.acceptedAt ? new Date(assignment.acceptedAt) : null}
                     arrivedAt={assignment.arrivedAt ? new Date(assignment.arrivedAt) : null}

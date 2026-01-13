@@ -74,7 +74,7 @@ export async function generateReport(
         orderBy: { createdAt: 'desc' },
         take: 1000, // Limit for performance
       }),
-      prisma.agency.findMany({
+      prisma.agencies.findMany({
         where: { isActive: true },
         select: {
           id: true,

@@ -46,6 +46,7 @@ export async function POST(request: Request) {
     // Create user
     const user = await prisma.users.create({
       data: {
+        id: `user-${Date.now()}-${Math.random().toString(36).substring(7)}`,
         name: data.name,
         email: data.email,
         phone: formatGhanaPhone(data.phone),
@@ -55,6 +56,7 @@ export async function POST(request: Request) {
         isActive: data.role === UserRole.CITIZEN, // Citizens are active immediately
         emailVerified: null, // Will be verified via email
         phoneVerified: null,
+        updatedAt: new Date(),
       },
     });
 

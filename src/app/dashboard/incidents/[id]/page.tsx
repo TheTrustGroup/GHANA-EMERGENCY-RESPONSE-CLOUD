@@ -116,7 +116,7 @@ export default function IncidentDetailPage() {
       } : undefined,
       timestamp: incident.createdAt,
     },
-    ...(updates || []).map((update) => ({
+    ...(updates || []).map((update: any) => ({
       id: update.id,
       type: (update.updateType === 'NOTE_ADDED' ? 'update' : update.updateType === 'RESPONDER_UPDATE' ? 'responder_assigned' : 'update'),
       description: update.content,

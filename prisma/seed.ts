@@ -168,7 +168,6 @@ async function main(): Promise<void> {
       data: {
         id: generateId('user'),
         updatedAt: new Date(),
-      data: {
         email: 'nadmo.admin@emergency.gov.gh',
         phone: formatGhanaPhone('0244000002'),
         name: 'NADMO Administrator',
@@ -184,7 +183,6 @@ async function main(): Promise<void> {
       data: {
         id: generateId('user'),
         updatedAt: new Date(),
-      data: {
         email: 'fire.admin@emergency.gov.gh',
         phone: formatGhanaPhone('0244000003'),
         name: 'Fire Service Administrator',
@@ -200,7 +198,6 @@ async function main(): Promise<void> {
       data: {
         id: generateId('user'),
         updatedAt: new Date(),
-      data: {
         email: 'police.admin@emergency.gov.gh',
         phone: formatGhanaPhone('0244000004'),
         name: 'Police Administrator',
@@ -222,7 +219,6 @@ async function main(): Promise<void> {
       data: {
         id: generateId('user'),
         updatedAt: new Date(),
-      data: {
         email: 'dispatcher1@emergency.gov.gh',
         phone: formatGhanaPhone('0244000010'),
         name: 'John Dispatcher',
@@ -237,7 +233,6 @@ async function main(): Promise<void> {
       data: {
         id: generateId('user'),
         updatedAt: new Date(),
-      data: {
         email: 'dispatcher2@emergency.gov.gh',
         phone: formatGhanaPhone('0244000011'),
         name: 'Mary Dispatcher',
@@ -259,7 +254,6 @@ async function main(): Promise<void> {
       data: {
         id: generateId('user'),
         updatedAt: new Date(),
-      data: {
         email: 'responder1@nadmo.gov.gh',
         phone: formatGhanaPhone('0244000101'),
         name: 'Kwame Asante',
@@ -274,7 +268,6 @@ async function main(): Promise<void> {
       data: {
         id: generateId('user'),
         updatedAt: new Date(),
-      data: {
         email: 'responder2@nadmo.gov.gh',
         phone: formatGhanaPhone('0244000102'),
         name: 'Ama Mensah',
@@ -290,7 +283,6 @@ async function main(): Promise<void> {
       data: {
         id: generateId('user'),
         updatedAt: new Date(),
-      data: {
         email: 'responder3@fire.gov.gh',
         phone: formatGhanaPhone('0244000201'),
         name: 'Kofi Firefighter',
@@ -305,7 +297,6 @@ async function main(): Promise<void> {
       data: {
         id: generateId('user'),
         updatedAt: new Date(),
-      data: {
         email: 'responder4@fire.gov.gh',
         phone: formatGhanaPhone('0244000202'),
         name: 'Akosua Firefighter',
@@ -321,7 +312,6 @@ async function main(): Promise<void> {
       data: {
         id: generateId('user'),
         updatedAt: new Date(),
-      data: {
         email: 'responder5@police.gov.gh',
         phone: formatGhanaPhone('0244000301'),
         name: 'Yaw Policeman',
@@ -336,7 +326,6 @@ async function main(): Promise<void> {
       data: {
         id: generateId('user'),
         updatedAt: new Date(),
-      data: {
         email: 'responder6@police.gov.gh',
         phone: formatGhanaPhone('0244000302'),
         name: 'Efua Policewoman',
@@ -352,7 +341,6 @@ async function main(): Promise<void> {
       data: {
         id: generateId('user'),
         updatedAt: new Date(),
-      data: {
         email: 'responder7@ambulance.gov.gh',
         phone: formatGhanaPhone('0244000401'),
         name: 'Kojo Paramedic',
@@ -367,7 +355,6 @@ async function main(): Promise<void> {
       data: {
         id: generateId('user'),
         updatedAt: new Date(),
-      data: {
         email: 'responder8@ambulance.gov.gh',
         phone: formatGhanaPhone('0244000402'),
         name: 'Adwoa Paramedic',
@@ -383,7 +370,6 @@ async function main(): Promise<void> {
       data: {
         id: generateId('user'),
         updatedAt: new Date(),
-      data: {
         email: 'responder9@secureguard.gh',
         phone: formatGhanaPhone('0244000501'),
         name: 'Nana Security',
@@ -398,7 +384,6 @@ async function main(): Promise<void> {
       data: {
         id: generateId('user'),
         updatedAt: new Date(),
-      data: {
         email: 'responder10@secureguard.gh',
         phone: formatGhanaPhone('0244000502'),
         name: 'Maame Security',
@@ -419,7 +404,6 @@ async function main(): Promise<void> {
       data: {
         id: generateId('user'),
         updatedAt: new Date(),
-      data: {
         email: 'citizen1@example.com',
         phone: formatGhanaPhone('0245000001'),
         name: 'Kwabena Osei',
@@ -434,7 +418,6 @@ async function main(): Promise<void> {
       data: {
         id: generateId('user'),
         updatedAt: new Date(),
-      data: {
         email: 'citizen2@example.com',
         phone: formatGhanaPhone('0245000002'),
         name: 'Ama Darko',
@@ -449,7 +432,6 @@ async function main(): Promise<void> {
       data: {
         id: generateId('user'),
         updatedAt: new Date(),
-      data: {
         email: 'citizen3@example.com',
         phone: formatGhanaPhone('0245000003'),
         name: 'Kofi Appiah',
@@ -464,7 +446,6 @@ async function main(): Promise<void> {
       data: {
         id: generateId('user'),
         updatedAt: new Date(),
-      data: {
         email: 'citizen4@example.com',
         phone: formatGhanaPhone('0245000004'),
         name: 'Efua Boateng',
@@ -479,7 +460,6 @@ async function main(): Promise<void> {
       data: {
         id: generateId('user'),
         updatedAt: new Date(),
-      data: {
         email: 'citizen5@example.com',
         phone: formatGhanaPhone('0245000005'),
         name: 'Yaw Mensah',
@@ -555,7 +535,6 @@ async function main(): Promise<void> {
       data: {
         id: generateId('user'),
         updatedAt: new Date(),
-        data: {
           ...account,
           passwordHash: await hashPassword('Test1234'),
           isActive: true,

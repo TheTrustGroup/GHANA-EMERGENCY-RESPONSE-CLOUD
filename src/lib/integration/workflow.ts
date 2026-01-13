@@ -4,7 +4,11 @@
  */
 
 import { prisma } from '@/server/db';
-import { broadcastNewIncident, broadcastIncidentUpdate, broadcastDispatchAssignment } from '@/lib/realtime/pusher-server';
+import {
+  broadcastNewIncident,
+  broadcastIncidentUpdate,
+  broadcastDispatchAssignment,
+} from '@/lib/realtime/pusher-server';
 import { createNotification, NotificationType } from '@/lib/notifications/notification-service';
 
 // ============================================
@@ -32,7 +36,7 @@ export async function handleNewIncident(incidentData: {
   }
 
   // 2. Save to database
-  const incident = await prisma.incident.create({
+  const incident = await prisma.incidents.create({
     data: {
       category: incidentData.category as any,
       severity: incidentData.severity as any,
@@ -97,7 +101,7 @@ export async function handleNewIncident(incidentData: {
 
   // 6. Create audit log
   if (incidentData.reportedById) {
-    await prisma.auditLog.create({
+    await prisma.audit_logs.create({
       data: {
         userId: incidentData.reportedById,
         action: 'INCIDENT_CREATED',
@@ -120,8 +124,8 @@ export async function handleDispatchAssignment(assignmentData: {
 }) {
   // 1. Verify incident and agency exist
   const [incident, agency] = await Promise.all([
-    prisma.incident.findUnique({ where: { id: assignmentData.incidentId } }),
-    prisma.agency.findUnique({ where: { id: assignmentData.agencyId } }),
+    prisma.incidents.findUnique({ where: { id: assignmentData.incidentId } }),
+    prisma.agencies.findUnique({ where: { id: assignmentData.agencyId } }),
   ]);
 
   if (!incident) {
@@ -144,7 +148,7 @@ export async function handleDispatchAssignment(assignmentData: {
   }
 
   // 3. Create assignment
-  const assignment = await prisma.dispatchAssignment.create({
+  const assignment = await prisma.dispatch_assignments.create({
     data: {
       incidentId: assignmentData.incidentId,
       agencyId: assignmentData.agencyId,
@@ -161,7 +165,7 @@ export async function handleDispatchAssignment(assignmentData: {
   });
 
   // 4. Update incident status
-  await prisma.incident.update({
+  await prisma.incidents.update({
     where: { id: assignmentData.incidentId },
     data: {
       assignedAgencyId: assignmentData.agencyId,
@@ -206,7 +210,7 @@ export async function handleDispatchAssignment(assignmentData: {
   }
 
   // 8. Create audit log
-  await prisma.auditLog.create({
+  await prisma.audit_logs.create({
     data: {
       userId: assignmentData.dispatcherId,
       action: 'CREATE_DISPATCH',
@@ -231,7 +235,7 @@ export async function handleStatusUpdate(updateData: {
   userId: string;
 }) {
   // 1. Get assignment
-  const assignment = await prisma.dispatchAssignment.findUnique({
+  const assignment = await prisma.dispatch_assignments.findUnique({
     where: { id: updateData.assignmentId },
     include: { incident: true, responder: true },
   });
@@ -258,20 +262,20 @@ export async function handleStatusUpdate(updateData: {
   } else if (updateData.status === 'ARRIVED') {
     updateFields.arrivedAt = new Date();
     // Update incident status
-    await prisma.incident.update({
+    await prisma.incidents.update({
       where: { id: assignment.incidentId },
       data: { status: 'IN_PROGRESS' },
     });
   } else if (updateData.status === 'COMPLETED') {
     updateFields.completedAt = new Date();
     // Update incident status
-    await prisma.incident.update({
+    await prisma.incidents.update({
       where: { id: assignment.incidentId },
       data: { status: 'RESOLVED', resolvedAt: new Date() },
     });
   }
 
-  const updated = await prisma.dispatchAssignment.update({
+  const updated = await prisma.dispatch_assignments.update({
     where: { id: updateData.assignmentId },
     data: updateFields,
   });
@@ -284,15 +288,20 @@ export async function handleStatusUpdate(updateData: {
         lastLatitude: updateData.latitude,
         lastLongitude: updateData.longitude,
         lastLocationUpdate: new Date(),
-        status: updateData.status === 'EN_ROUTE' ? 'EN_ROUTE' :
-                updateData.status === 'ARRIVED' ? 'ON_SCENE' :
-                updateData.status === 'COMPLETED' ? 'AVAILABLE' : 'DISPATCHED',
+        status:
+          updateData.status === 'EN_ROUTE'
+            ? 'EN_ROUTE'
+            : updateData.status === 'ARRIVED'
+              ? 'ON_SCENE'
+              : updateData.status === 'COMPLETED'
+                ? 'AVAILABLE'
+                : 'DISPATCHED',
       },
     });
   }
 
   // 4. Create incident update
-  await prisma.incidentUpdate.create({
+  await prisma.incidentsUpdate.create({
     data: {
       incidentId: assignment.incidentId,
       userId: updateData.userId,
@@ -303,8 +312,12 @@ export async function handleStatusUpdate(updateData: {
 
   // 5. Broadcast updates
   await broadcastIncidentUpdate(assignment.incidentId, {
-    status: updateData.status === 'ARRIVED' ? 'IN_PROGRESS' : 
-            updateData.status === 'COMPLETED' ? 'RESOLVED' : undefined,
+    status:
+      updateData.status === 'ARRIVED'
+        ? 'IN_PROGRESS'
+        : updateData.status === 'COMPLETED'
+          ? 'RESOLVED'
+          : undefined,
   });
 
   // 6. Notify reporter
@@ -332,13 +345,9 @@ export async function handleStatusUpdate(updateData: {
 // HELPER FUNCTIONS
 // ============================================
 
-async function findNearbyAgencies(
-  latitude: number,
-  longitude: number,
-  radiusKm: number
-) {
+async function findNearbyAgencies(latitude: number, longitude: number, radiusKm: number) {
   // Get all active agencies
-  const agencies = await prisma.agency.findMany({
+  const agencies = await prisma.agencies.findMany({
     where: { isActive: true },
   });
 
@@ -346,13 +355,8 @@ async function findNearbyAgencies(
   const nearby = agencies
     .map((agency) => {
       if (!agency.latitude || !agency.longitude) return null;
-      
-      const distance = calculateDistance(
-        latitude,
-        longitude,
-        agency.latitude,
-        agency.longitude
-      );
+
+      const distance = calculateDistance(latitude, longitude, agency.latitude, agency.longitude);
 
       return { ...agency, distance };
     })
@@ -362,21 +366,13 @@ async function findNearbyAgencies(
   return nearby as any[];
 }
 
-function calculateDistance(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number
-): number {
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371; // Earth's radius in km
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) *
-      Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }

@@ -38,21 +38,21 @@ export const analyticsRouter = createTRPCRouter({
           }
 
           // Count by severity
-          const bySeverity = await ctx.prisma.incident.groupBy({
+          const bySeverity = await ctx.prisma.incidents.groupBy({
             by: ['severity'],
             where,
             _count: true,
           });
 
           // Count by category
-          const byCategory = await ctx.prisma.incident.groupBy({
+          const byCategory = await ctx.prisma.incidents.groupBy({
             by: ['category'],
             where,
             _count: true,
           });
 
           // Count by status
-          const byStatus = await ctx.prisma.incident.groupBy({
+          const byStatus = await ctx.prisma.incidents.groupBy({
             by: ['status'],
             where,
             _count: true,
@@ -98,7 +98,7 @@ export const analyticsRouter = createTRPCRouter({
         if (input.endDate) where.createdAt.lte = input.endDate;
       }
 
-      const incidents = await ctx.prisma.incident.findMany({
+      const incidents = await ctx.prisma.incidents.findMany({
         where,
         select: {
           responseTime: true,
@@ -162,12 +162,12 @@ export const analyticsRouter = createTRPCRouter({
       });
     }
 
-    const byRegion = await ctx.prisma.incident.groupBy({
+    const byRegion = await ctx.prisma.incidents.groupBy({
       by: ['region'],
       _count: true,
     });
 
-    const byDistrict = await ctx.prisma.incident.groupBy({
+    const byDistrict = await ctx.prisma.incidents.groupBy({
       by: ['region', 'district'],
       _count: true,
     });
@@ -209,11 +209,11 @@ export const analyticsRouter = createTRPCRouter({
       }
 
       const [totalIncidents, resolvedIncidents, avgResponseTime] = await Promise.all([
-        ctx.prisma.incident.count({ where }),
-        ctx.prisma.incident.count({
+        ctx.prisma.incidents.count({ where }),
+        ctx.prisma.incidents.count({
           where: { ...where, status: 'RESOLVED' },
         }),
-        ctx.prisma.incident.aggregate({
+        ctx.prisma.incidents.aggregate({
           where: { ...where, responseTime: { not: null } },
           _avg: { responseTime: true },
         }),
@@ -277,29 +277,29 @@ export const analyticsRouter = createTRPCRouter({
         avgResponseTime,
         resolvedToday,
       ] = await Promise.all([
-        ctx.prisma.incident.count({
+        ctx.prisma.incidents.count({
           where: {
             ...where,
             status: { notIn: ['RESOLVED', 'CLOSED'] },
           },
         }),
-        ctx.prisma.incident.count({
+        ctx.prisma.incidents.count({
           where: {
             ...where,
             severity: 'CRITICAL',
             status: { notIn: ['RESOLVED', 'CLOSED'] },
           },
         }),
-        ctx.prisma.agency.count(),
-        ctx.prisma.agency.count({ where: { isActive: true } }),
-        ctx.prisma.incident.aggregate({
+        ctx.prisma.agencies.count(),
+        ctx.prisma.agencies.count({ where: { isActive: true } }),
+        ctx.prisma.incidents.aggregate({
           where: {
             ...where,
             responseTime: { not: null },
           },
           _avg: { responseTime: true },
         }),
-        ctx.prisma.incident.count({
+        ctx.prisma.incidents.count({
           where: {
             ...where,
             status: 'RESOLVED',
@@ -314,7 +314,7 @@ export const analyticsRouter = createTRPCRouter({
       const previousStart = new Date(startDate);
       previousStart.setHours(previousStart.getHours() - 24);
 
-      const previousTotal = await ctx.prisma.incident.count({
+      const previousTotal = await ctx.prisma.incidents.count({
         where: {
           ...where,
           createdAt: { gte: previousStart, lt: startDate },
@@ -363,7 +363,7 @@ export const analyticsRouter = createTRPCRouter({
         where.assignedAgencyId = ctx.session.user.agencyId;
       }
 
-      const incidents = await ctx.prisma.incident.findMany({
+      const incidents = await ctx.prisma.incidents.findMany({
         where,
         select: {
           createdAt: true,
@@ -413,7 +413,7 @@ export const analyticsRouter = createTRPCRouter({
           break;
       }
 
-      const agencies = await ctx.prisma.agency.findMany({
+      const agencies = await ctx.prisma.agencies.findMany({
         where: { isActive: true },
         include: {
           _count: {
@@ -431,7 +431,7 @@ export const analyticsRouter = createTRPCRouter({
       // Calculate performance metrics
       const agencyPerformance = await Promise.all(
         agencies.map(async (agency) => {
-          const incidents = await ctx.prisma.incident.findMany({
+          const incidents = await ctx.prisma.incidents.findMany({
             where: {
               assignedAgencyId: agency.id,
               createdAt: { gte: startDate },
@@ -494,7 +494,7 @@ export const analyticsRouter = createTRPCRouter({
         if (input.endDate) where.createdAt.lte = input.endDate;
       }
 
-      const incidents = await ctx.prisma.incident.findMany({
+      const incidents = await ctx.prisma.incidents.findMany({
         where,
         select: {
           createdAt: true,
@@ -556,7 +556,7 @@ export const analyticsRouter = createTRPCRouter({
         if (input.endDate) where.createdAt.lte = input.endDate;
       }
 
-      const incidents = await ctx.prisma.incident.findMany({
+      const incidents = await ctx.prisma.incidents.findMany({
         where,
         select: {
           createdAt: true,
@@ -599,31 +599,31 @@ export const analyticsRouter = createTRPCRouter({
 
     // Get active incidents by severity
     const [critical, high, medium, low, total] = await Promise.all([
-      ctx.prisma.incident.count({
+      ctx.prisma.incidents.count({
         where: {
           severity: 'CRITICAL',
           status: { not: 'CLOSED' },
         },
       }),
-      ctx.prisma.incident.count({
+      ctx.prisma.incidents.count({
         where: {
           severity: 'HIGH',
           status: { not: 'CLOSED' },
         },
       }),
-      ctx.prisma.incident.count({
+      ctx.prisma.incidents.count({
         where: {
           severity: 'MEDIUM',
           status: { not: 'CLOSED' },
         },
       }),
-      ctx.prisma.incident.count({
+      ctx.prisma.incidents.count({
         where: {
           severity: 'LOW',
           status: { not: 'CLOSED' },
         },
       }),
-      ctx.prisma.incident.count({
+      ctx.prisma.incidents.count({
         where: {
           status: { not: 'CLOSED' },
         },
@@ -646,7 +646,7 @@ export const analyticsRouter = createTRPCRouter({
     });
 
     // Get active incidents
-    const active = await ctx.prisma.incident.count({
+    const active = await ctx.prisma.incidents.count({
       where: {
         status: {
           in: ['DISPATCHED', 'IN_PROGRESS'],
@@ -658,7 +658,7 @@ export const analyticsRouter = createTRPCRouter({
     const oneDayAgo = new Date();
     oneDayAgo.setHours(oneDayAgo.getHours() - 24);
 
-    const recentIncidents = await ctx.prisma.incident.findMany({
+    const recentIncidents = await ctx.prisma.incidents.findMany({
       where: {
         responseTime: { not: null },
         createdAt: { gte: oneDayAgo },
@@ -677,7 +677,7 @@ export const analyticsRouter = createTRPCRouter({
         : 0;
 
     // Get unread alerts (notifications)
-    const unreadAlerts = await ctx.prisma.notification.count({
+    const unreadAlerts = await ctx.prisma.notifications.count({
       where: {
         userId: ctx.session.user.id,
         isRead: false,

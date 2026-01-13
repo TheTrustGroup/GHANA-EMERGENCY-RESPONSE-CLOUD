@@ -62,7 +62,7 @@ export default function AuditLogsPage() {
                           </p>
                         )}
                         <p className="text-xs text-muted-foreground mt-1">
-                          User: {log.user?.name || 'System'} •{' '}
+                          User: {log.users?.name || 'System'} •{' '}
                           {format(new Date(log.createdAt), 'PPp')}
                         </p>
                       </div>

@@ -244,9 +244,9 @@ export default function IncidentsPage() {
                       {incident.district}, {incident.region}
                     </TableCell>
                     <TableCell>
-                      {incident.assignedAgency?.name || 'Unassigned'}
+                      {incident.agencies?.name || 'Unassigned'}
                     </TableCell>
-                    <TableCell>{incident.reportedBy?.name || 'Unknown'}</TableCell>
+                    <TableCell>{incident.users?.name || 'Unknown'}</TableCell>
                     <TableCell>{format(new Date(incident.createdAt), 'MMM d, yyyy HH:mm')}</TableCell>
                     <TableCell>
                       <Button variant="ghost" size="sm" asChild>

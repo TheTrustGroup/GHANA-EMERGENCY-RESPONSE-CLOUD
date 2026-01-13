@@ -8,7 +8,7 @@ import { prisma } from '@/server/db';
 
 export async function GET() {
   try {
-    const agencies = await prisma.agency.findMany({
+    const agencies = await prisma.agencies.findMany({
       where: {
         isActive: true,
       },

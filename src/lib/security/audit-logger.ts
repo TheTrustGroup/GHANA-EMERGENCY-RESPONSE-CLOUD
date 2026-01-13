@@ -26,7 +26,7 @@ export async function logSecurityEvent(entry: AuditLogEntry): Promise<void> {
     // System user ID for system-generated events
     const systemUserId = 'system';
     
-    await prisma.auditLog.create({
+    await prisma.audit_logs.create({
       data: {
         userId: entry.userId || systemUserId,
         action: entry.action,

@@ -83,7 +83,7 @@ export function ResponderTrackingDialog({
           <div className="grid grid-cols-3 gap-4">
             <div>
               <p className="text-sm text-muted-foreground">Responder</p>
-              <p className="font-medium">{currentDispatch.responder?.name || 'Unassigned'}</p>
+              <p className="font-medium">{currentDispatch.users?.name || 'Unassigned'}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Status</p>
@@ -108,7 +108,7 @@ export function ResponderTrackingDialog({
                 responderLocation
                   ? ({
                       id: currentDispatch.responderId || '',
-                      name: currentDispatch.responder?.name || 'Responder',
+                      name: currentDispatch.users?.name || 'Responder',
                       latitude: responderLocation.latitude,
                       longitude: responderLocation.longitude,
                       status: 'dispatched',

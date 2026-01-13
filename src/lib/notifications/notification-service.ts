@@ -47,11 +47,8 @@ export interface NotificationPreferences {
 /**
  * Create a notification
  */
-export async function createNotification(
-  userId: string,
-  data: NotificationData
-) {
-  const notification = await prisma.notification.create({
+export async function createNotification(userId: string, data: NotificationData) {
+  const notification = await prisma.notifications.create({
     data: {
       userId,
       type: data.type,
@@ -136,7 +133,7 @@ export async function sendToUser(userId: string, notification: any) {
  * Send notification to all users in an agency
  */
 export async function sendToAgency(agencyId: string, data: NotificationData) {
-  const agency = await prisma.agency.findUnique({
+  const agency = await prisma.agencies.findUnique({
     where: { id: agencyId },
     include: {
       users: {
@@ -149,7 +146,7 @@ export async function sendToAgency(agencyId: string, data: NotificationData) {
 
   if (!agency) return;
 
-      const userIds = agency.users.map((u: { id: string }) => u.id);
+  const userIds = agency.users.map((u: { id: string }) => u.id);
   await sendBulk(userIds, data);
 }
 
@@ -181,7 +178,7 @@ export async function sendBulk(userIds: string[], data: NotificationData) {
  * Mark notification as read
  */
 export async function markAsRead(notificationId: string, userId: string) {
-  const notification = await prisma.notification.findFirst({
+  const notification = await prisma.notifications.findFirst({
     where: {
       id: notificationId,
       userId,
@@ -192,7 +189,7 @@ export async function markAsRead(notificationId: string, userId: string) {
     throw new Error('Notification not found');
   }
 
-  return await prisma.notification.update({
+  return await prisma.notifications.update({
     where: { id: notificationId },
     data: { isRead: true },
   });
@@ -202,7 +199,7 @@ export async function markAsRead(notificationId: string, userId: string) {
  * Mark all notifications as read for a user
  */
 export async function markAllAsRead(userId: string) {
-  return prisma.notification.updateMany({
+  return prisma.notifications.updateMany({
     where: {
       userId,
       isRead: false,
@@ -217,7 +214,7 @@ export async function markAllAsRead(userId: string) {
  * Get unread notification count
  */
 export async function getUnreadCount(userId: string): Promise<number> {
-  return prisma.notification.count({
+  return prisma.notifications.count({
     where: {
       userId,
       isRead: false,
@@ -292,4 +289,3 @@ function formatSMSMessage(notification: any): string {
 
   return baseMessage;
 }
-

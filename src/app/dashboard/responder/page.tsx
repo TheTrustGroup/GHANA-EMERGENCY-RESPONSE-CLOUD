@@ -39,7 +39,7 @@ export default function ResponderFieldOps() {
   useDispatchUpdates(session?.user?.id || '', (data: any) => {
     // Maximum alert
     toast.error('🚨 NEW DISPATCH ASSIGNMENT!', {
-      description: data.incident?.title || 'An emergency requires your attention.',
+      description: data.incidents?.title || data.incident?.title || 'An emergency requires your attention.',
       duration: 30000,
       className: 'bg-red-600 text-white text-lg font-bold',
     });
@@ -133,7 +133,7 @@ function ActiveMissionView({ assignment, location, gpsActive, updateStatus }: an
         animate={{ opacity: 1, y: 0 }}
         className={`
           ${
-            assignment.incident.severity === 'CRITICAL'
+            assignment.incidents.severity === 'CRITICAL'
               ? 'animate-pulse-slow bg-gradient-to-r from-red-600 via-red-700 to-red-600'
               : 'bg-gradient-to-r from-red-600 to-red-700'
           }
@@ -144,7 +144,7 @@ function ActiveMissionView({ assignment, location, gpsActive, updateStatus }: an
           <div className="flex items-start gap-4">
             <motion.div
               animate={
-                assignment.incident.severity === 'CRITICAL'
+                assignment.incidents.severity === 'CRITICAL'
                   ? {
                       scale: [1, 1.1, 1],
                       rotate: [0, 5, -5, 0],
@@ -161,21 +161,21 @@ function ActiveMissionView({ assignment, location, gpsActive, updateStatus }: an
                 <Badge
                   variant="critical"
                   size="lg"
-                  pulse={assignment.incident.severity === 'CRITICAL'}
+                  pulse={assignment.incidents.severity === 'CRITICAL'}
                   className="bg-white font-black text-red-600"
                 >
-                  {assignment.incident.severity}
+                  {assignment.incidents.severity}
                 </Badge>
                 <Badge size="lg" className="border-0 bg-white/20 text-white">
-                  {assignment.incident.category}
+                  {assignment.incidents.category}
                 </Badge>
               </div>
               <h1 className="mb-2 text-3xl font-black">
-                {assignment.incident.title || 'Emergency Response'}
+                {assignment.incidents.title || 'Emergency Response'}
               </h1>
               <p className="flex items-center gap-2 text-lg text-red-100">
                 <MapPin className="h-5 w-5" />
-                {assignment.incident.region}, {assignment.incident.district}
+                {assignment.incidents.region}, {assignment.incidents.district}
               </p>
             </div>
           </div>
@@ -259,7 +259,7 @@ function ActiveMissionView({ assignment, location, gpsActive, updateStatus }: an
           <div className="aspect-video bg-slate-900">
             {location ? (
               <iframe
-                src={`https://www.google.com/maps/embed/v1/directions?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || ''}&origin=${location.coords.latitude},${location.coords.longitude}&destination=${assignment.incident.latitude},${assignment.incident.longitude}&mode=driving`}
+                src={`https://www.google.com/maps/embed/v1/directions?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || ''}&origin=${location.coords.latitude},${location.coords.longitude}&destination=${assignment.incidents.latitude},${assignment.incidents.longitude}&mode=driving`}
                 className="h-full w-full"
                 style={{ border: 0 }}
                 allowFullScreen
@@ -333,7 +333,7 @@ function ActiveMissionView({ assignment, location, gpsActive, updateStatus }: an
             icon={<Navigation className="h-6 w-6" />}
             onClick={() => {
               window.open(
-                `https://www.google.com/maps/dir/?api=1&destination=${assignment.incident.latitude},${assignment.incident.longitude}`,
+                `https://www.google.com/maps/dir/?api=1&destination=${assignment.incidents.latitude},${assignment.incidents.longitude}`,
                 '_blank'
               );
             }}

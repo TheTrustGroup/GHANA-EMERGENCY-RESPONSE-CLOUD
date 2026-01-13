@@ -6,10 +6,7 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
-import {
-  createNotification,
-  NotificationType,
-} from '@/lib/notifications/notification-service';
+import { createNotification, NotificationType } from '@/lib/notifications/notification-service';
 
 export const messagesRouter = createTRPCRouter({
   getByIncident: protectedProcedure
@@ -59,7 +56,7 @@ export const messagesRouter = createTRPCRouter({
       const skip = (input.page - 1) * input.pageSize;
 
       const [messages, total] = await Promise.all([
-        ctx.prisma.message.findMany({
+        ctx.prisma.messages.findMany({
           where: { incidentId: input.incidentId },
           include: {
             sender: {
@@ -75,7 +72,7 @@ export const messagesRouter = createTRPCRouter({
           skip,
           take: input.pageSize,
         }),
-        ctx.prisma.message.count({
+        ctx.prisma.messages.count({
           where: { incidentId: input.incidentId },
         }),
       ]);
@@ -136,7 +133,7 @@ export const messagesRouter = createTRPCRouter({
         });
       }
 
-      const message = await ctx.prisma.message.create({
+      const message = await ctx.prisma.messages.create({
         data: {
           incidentId: input.incidentId,
           senderId: ctx.session.user.id,
@@ -156,7 +153,7 @@ export const messagesRouter = createTRPCRouter({
       });
 
       // Create audit log
-      await ctx.prisma.auditLog.create({
+      await ctx.prisma.audit_logs.create({
         data: {
           userId: ctx.session.user.id,
           action: 'message_sent',
@@ -181,9 +178,12 @@ export const messagesRouter = createTRPCRouter({
 
       if (incidentWithParticipants) {
         const participantIds = new Set<string>();
-        
+
         // Add reporter
-        if (incidentWithParticipants.reportedById && incidentWithParticipants.reportedById !== ctx.session.user.id) {
+        if (
+          incidentWithParticipants.reportedById &&
+          incidentWithParticipants.reportedById !== ctx.session.user.id
+        ) {
           participantIds.add(incidentWithParticipants.reportedById);
         }
 
@@ -197,7 +197,7 @@ export const messagesRouter = createTRPCRouter({
         }
 
         // Get message senders
-        const messageSenders = await ctx.prisma.message.findMany({
+        const messageSenders = await ctx.prisma.messages.findMany({
           where: { incidentId: input.incidentId },
           select: { senderId: true },
           distinct: ['senderId'],
@@ -287,7 +287,7 @@ export const messagesRouter = createTRPCRouter({
       }
 
       // Get unique message senders
-      const messageSenders = await ctx.prisma.message.findMany({
+      const messageSenders = await ctx.prisma.messages.findMany({
         where: { incidentId: input.incidentId },
         select: {
           senderId: true,
@@ -303,9 +303,7 @@ export const messagesRouter = createTRPCRouter({
           OR: [
             ...(incident.reportedById ? [{ id: incident.reportedById }] : []),
             { id: { in: Array.from(senderIds) } },
-            ...(incident.assignedAgency
-              ? [{ agencyId: incident.assignedAgencyId }]
-              : []),
+            ...(incident.assignedAgency ? [{ agencyId: incident.assignedAgencyId }] : []),
           ],
         },
         select: {
@@ -326,4 +324,3 @@ export const messagesRouter = createTRPCRouter({
       }));
     }),
 });
-

@@ -28,7 +28,7 @@ export const auditRouter = createTRPCRouter({
       // Get user agent
       const userAgent = ctx.req.headers.get('user-agent') || 'unknown';
 
-      const auditLog = await ctx.prisma.auditLog.create({
+      const auditLog = await ctx.prisma.audit_logs.create({
         data: {
           userId: ctx.session.user.id,
           action: input.action,
@@ -51,7 +51,7 @@ export const auditRouter = createTRPCRouter({
       })
     )
     .query(async ({ input, ctx }) => {
-      const logs = await ctx.prisma.auditLog.findMany({
+      const logs = await ctx.prisma.audit_logs.findMany({
         where: {
           entity: input.entity,
           entityId: input.entityId,
@@ -86,7 +86,7 @@ export const auditRouter = createTRPCRouter({
         });
       }
 
-      const logs = await ctx.prisma.auditLog.findMany({
+      const logs = await ctx.prisma.audit_logs.findMany({
         where: { userId: input.userId },
         orderBy: { createdAt: 'desc' },
         take: 100,
@@ -111,10 +111,10 @@ export const auditRouter = createTRPCRouter({
       }
 
       const [logs, total] = await Promise.all([
-        ctx.prisma.auditLog.findMany({
+        ctx.prisma.audit_logs.findMany({
           where,
           include: {
-            user: {
+            users: {
               select: {
                 id: true,
                 name: true,
@@ -127,7 +127,7 @@ export const auditRouter = createTRPCRouter({
           skip: (input.page - 1) * input.pageSize,
           take: input.pageSize,
         }),
-        ctx.prisma.auditLog.count({ where }),
+        ctx.prisma.audit_logs.count({ where }),
       ]);
 
       return {
@@ -148,7 +148,7 @@ export const auditRouter = createTRPCRouter({
       })
     )
     .query(async ({ input, ctx }) => {
-      const logs = await ctx.prisma.auditLog.findMany({
+      const logs = await ctx.prisma.audit_logs.findMany({
         include: {
           user: {
             select: {

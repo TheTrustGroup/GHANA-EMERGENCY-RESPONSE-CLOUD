@@ -43,7 +43,7 @@ export const incidentsRouter = createTRPCRouter({
       const district = getDistrictFromCoordinates(input.latitude, input.longitude);
       
       // Create incident
-      const incident = await ctx.prisma.incident.create({
+      const incident = await ctx.prisma.incidents.create({
         data: {
           ...input,
           region,
@@ -70,7 +70,7 @@ export const incidentsRouter = createTRPCRouter({
       
       // Create audit log if user is logged in
       if (ctx.session?.user) {
-        await ctx.prisma.auditLog.create({
+        await ctx.prisma.audit_logs.create({
           data: {
             userId: ctx.session.user.id,
             action: 'CREATE_INCIDENT',
@@ -93,7 +93,7 @@ export const incidentsRouter = createTRPCRouter({
       // Remove region and district from input (we calculate them)
       const { region: _, district: __, ...incidentData } = input;
       
-      const incident = await ctx.prisma.incident.create({
+      const incident = await ctx.prisma.incidents.create({
         data: {
           ...incidentData,
           region,
@@ -113,7 +113,7 @@ export const incidentsRouter = createTRPCRouter({
       });
 
       // Create audit log
-      await ctx.prisma.auditLog.create({
+      await ctx.prisma.audit_logs.create({
         data: {
           userId: ctx.session.user.id,
           action: 'incident_created',
@@ -195,13 +195,13 @@ export const incidentsRouter = createTRPCRouter({
           }
 
           const [incidents, total] = await Promise.all([
-            ctx.prisma.incident.findMany({
+            ctx.prisma.incidents.findMany({
               where,
               include: {
-                reportedBy: {
+                users: {
                   select: { id: true, name: true, email: true },
                 },
-                assignedAgency: {
+                agencies: {
                   select: { id: true, name: true, type: true },
                 },
               },
@@ -211,7 +211,7 @@ export const incidentsRouter = createTRPCRouter({
               skip: (input.page - 1) * input.pageSize,
               take: input.pageSize,
             }),
-            ctx.prisma.incident.count({ where }),
+            ctx.prisma.incidents.count({ where }),
           ]);
 
           return {
@@ -231,21 +231,21 @@ export const incidentsRouter = createTRPCRouter({
   getById: protectedProcedure
     .input(z.object({ id: z.string().cuid() }))
     .query(async ({ input, ctx }) => {
-      const incident = await ctx.prisma.incident.findUnique({
+      const incident = await ctx.prisma.incidents.findUnique({
         where: { id: input.id },
         include: {
-          reportedBy: {
+          users: {
             select: { id: true, name: true, email: true, phone: true },
           },
-          assignedAgency: {
+          agencies: {
             select: { id: true, name: true, type: true, contactPhone: true },
           },
-          dispatches: {
+          dispatch_assignments: {
             include: {
-              responder: {
+              users: {
                 select: { id: true, name: true, email: true },
               },
-              agency: {
+              agencies: {
                 select: { id: true, name: true },
               },
             },
@@ -292,7 +292,7 @@ export const incidentsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const incident = await ctx.prisma.incident.findUnique({
+      const incident = await ctx.prisma.incidents.findUnique({
         where: { id: input.id },
       });
 
@@ -315,13 +315,13 @@ export const incidentsRouter = createTRPCRouter({
         });
       }
 
-      const updated = await ctx.prisma.incident.update({
+      const updated = await ctx.prisma.incidents.update({
         where: { id: input.id },
         data: input.data,
       });
 
       // Create audit log
-      await ctx.prisma.auditLog.create({
+      await ctx.prisma.audit_logs.create({
         data: {
           userId: ctx.session.user.id,
           action: 'incident_updated',
@@ -347,7 +347,7 @@ export const incidentsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const incident = await ctx.prisma.incident.findUnique({
+      const incident = await ctx.prisma.incidents.findUnique({
         where: { id: input.id },
       });
 
@@ -366,13 +366,13 @@ export const incidentsRouter = createTRPCRouter({
         updateData.closedAt = new Date();
       }
 
-      const updated = await ctx.prisma.incident.update({
+      const updated = await ctx.prisma.incidents.update({
         where: { id: input.id },
         data: updateData,
       });
 
       // Add update record
-      await ctx.prisma.incidentUpdate.create({
+      await ctx.prisma.incidentsUpdate.create({
         data: {
           incidentId: input.id,
           userId: ctx.session.user.id,
@@ -391,7 +391,7 @@ export const incidentsRouter = createTRPCRouter({
       }
 
       // Create audit log
-      await ctx.prisma.auditLog.create({
+      await ctx.prisma.audit_logs.create({
         data: {
           userId: ctx.session.user.id,
           action: 'incident_status_changed',
@@ -419,7 +419,7 @@ export const incidentsRouter = createTRPCRouter({
     )
     .mutation(async ({ input, ctx }) => {
       const [incident, agency] = await Promise.all([
-        ctx.prisma.incident.findUnique({ where: { id: input.incidentId } }),
+        ctx.prisma.incidents.findUnique({ where: { id: input.incidentId } }),
         ctx.prisma.agency.findUnique({ where: { id: input.agencyId } }),
       ]);
 
@@ -437,7 +437,7 @@ export const incidentsRouter = createTRPCRouter({
         });
       }
 
-      const updated = await ctx.prisma.incident.update({
+      const updated = await ctx.prisma.incidents.update({
         where: { id: input.incidentId },
         data: {
           assignedAgencyId: input.agencyId,
@@ -464,7 +464,7 @@ export const incidentsRouter = createTRPCRouter({
       invalidateQueryCache('incidents.getActiveForMap');
 
       // Create audit log
-      await ctx.prisma.auditLog.create({
+      await ctx.prisma.audit_logs.create({
         data: {
           userId: ctx.session.user.id,
           action: 'ASSIGN_AGENCY',
@@ -481,7 +481,7 @@ export const incidentsRouter = createTRPCRouter({
     .input(nearbyIncidentsSchema)
     .query(async ({ input, ctx }) => {
       // Get all active incidents
-      const incidents = await ctx.prisma.incident.findMany({
+      const incidents = await ctx.prisma.incidents.findMany({
         where: {
           status: {
             not: IncidentStatus.CLOSED,
@@ -517,7 +517,7 @@ export const incidentsRouter = createTRPCRouter({
       'incidents.getActive',
       { userId: ctx.session.user.id, role: ctx.session.user.role },
       async () => {
-        const incidents = await ctx.prisma.incident.findMany({
+        const incidents = await ctx.prisma.incidents.findMany({
           where: {
             status: {
               not: IncidentStatus.CLOSED,
@@ -553,7 +553,7 @@ export const incidentsRouter = createTRPCRouter({
       'incidents.getActiveForMap',
       {},
       async () => {
-        const incidents = await ctx.prisma.incident.findMany({
+        const incidents = await ctx.prisma.incidents.findMany({
           where: {
             status: {
               in: ['REPORTED', 'DISPATCHED', 'IN_PROGRESS'],
@@ -583,7 +583,7 @@ export const incidentsRouter = createTRPCRouter({
   getUpdates: protectedProcedure
     .input(z.object({ id: z.string().cuid() }))
     .query(async ({ input, ctx }) => {
-      const incident = await ctx.prisma.incident.findUnique({
+      const incident = await ctx.prisma.incidents.findUnique({
         where: { id: input.id },
       });
 
@@ -607,7 +607,7 @@ export const incidentsRouter = createTRPCRouter({
         });
       }
 
-      const updates = await ctx.prisma.incidentUpdate.findMany({
+      const updates = await ctx.prisma.incidentsUpdate.findMany({
         where: { incidentId: input.id },
         include: {
           user: {
@@ -630,7 +630,7 @@ export const incidentsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const incident = await ctx.prisma.incident.findUnique({
+      const incident = await ctx.prisma.incidents.findUnique({
         where: { id: input.incidentId },
       });
 
@@ -661,7 +661,7 @@ export const incidentsRouter = createTRPCRouter({
         'media': 'MEDIA_ADDED',
       };
 
-      const update = await ctx.prisma.incidentUpdate.create({
+      const update = await ctx.prisma.incidentsUpdate.create({
         data: {
           incidentId: input.incidentId,
           userId: ctx.session.user.id,
