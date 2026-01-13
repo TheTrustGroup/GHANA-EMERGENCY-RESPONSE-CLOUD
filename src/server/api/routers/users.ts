@@ -14,7 +14,7 @@ export const usersRouter = createTRPCRouter({
     const user = await ctx.prisma.users.findUnique({
       where: { id: ctx.session.user.id },
       include: {
-        agency: {
+        agencies: {
           select: {
             id: true,
             name: true,
