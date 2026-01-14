@@ -157,9 +157,15 @@ async function getIPGeolocation(): Promise<GeolocationResult> {
 
     for (const service of services) {
       try {
+        // Create abort controller for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
         const response = await fetch(service, {
-          signal: AbortSignal.timeout(5000), // 5 second timeout
+          signal: controller.signal,
         });
+        
+        clearTimeout(timeoutId);
 
         if (!response.ok) continue;
 
@@ -186,8 +192,8 @@ async function getIPGeolocation(): Promise<GeolocationResult> {
             timestamp: Date.now(),
           };
         }
-      } catch (error) {
-        console.warn(`IP geolocation service failed: ${service}`, error);
+      } catch (err) {
+        console.warn(`IP geolocation service failed: ${service}`, err);
         continue;
       }
     }
@@ -235,7 +241,7 @@ export function watchRobustPosition(
 
       onSuccess(result);
     },
-    (error) => {
+    (_error) => {
       // Set up fallback after error
       if (fallbackTimeout) clearTimeout(fallbackTimeout);
 

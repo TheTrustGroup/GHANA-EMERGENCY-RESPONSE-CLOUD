@@ -15,7 +15,6 @@ import {
   Car,
   AlertTriangle,
   MapPin,
-  Map,
   Camera,
   CheckCircle,
   X,
