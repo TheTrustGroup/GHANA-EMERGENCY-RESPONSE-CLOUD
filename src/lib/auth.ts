@@ -71,7 +71,7 @@ export const authOptions: NextAuthOptions = {
 
           return {
             id: user.id,
-            email: user.email,
+            email: user.email || '', // NextAuth requires email to be string, use empty string as fallback
             name: user.name,
             role: user.role,
             agencyId: user.agencyId,
