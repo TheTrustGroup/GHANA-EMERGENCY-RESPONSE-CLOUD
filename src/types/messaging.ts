@@ -13,7 +13,7 @@ export interface Message {
     id: string;
     name: string;
     role: UserRole | string;
-    email: string;
+    email: string | null;
   };
   isSystemMessage: boolean;
   isUrgent?: boolean;
@@ -25,7 +25,7 @@ export interface Participant {
   id: string;
   name: string;
   role: UserRole;
-  email: string;
+  email: string | null;
   isOnline?: boolean;
   lastSeen?: Date;
 }

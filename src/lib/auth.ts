@@ -213,7 +213,7 @@ export async function validateCredentials(
   password: string
 ): Promise<{
   id: string;
-  email: string;
+  email: string | null;
   name: string | null;
   role: UserRole;
   agencyId: string | null;
