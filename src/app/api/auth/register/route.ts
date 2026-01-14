@@ -18,7 +18,8 @@ const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name too long'),
   phone: z.string().regex(/^\+233[0-9]{9}$|^0[0-9]{9}$/, 'Invalid Ghana phone number'),
   email: z.string().email('Invalid email').optional().or(z.literal('')),
-  password: z.string()
+  password: z
+    .string()
     .min(8, 'Password must be at least 8 characters')
     .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
     .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
@@ -26,6 +27,12 @@ const registerSchema = z.object({
   role: z.nativeEnum(UserRole).default(UserRole.CITIZEN),
   agencyId: z.string().optional(),
   agencyCode: z.string().optional(), // For agency staff registration
+  termsAccepted: z
+    .boolean()
+    .refine((val) => val === true, {
+      message: 'You must accept the terms of service',
+    })
+    .optional(), // Accept terms acceptance (optional for backward compatibility)
 });
 
 export async function POST(request: NextRequest) {
@@ -38,7 +45,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Validation failed',
-          details: validation.error.errors
+          details: validation.error.errors,
         },
         { status: 400 }
       );
@@ -84,10 +91,7 @@ export async function POST(request: NextRequest) {
       });
 
       if (!agency) {
-        return NextResponse.json(
-          { error: 'Invalid or inactive agency' },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: 'Invalid or inactive agency' }, { status: 400 });
       }
     }
 
@@ -103,7 +107,7 @@ export async function POST(request: NextRequest) {
         id: userId,
         name: data.name,
         phone: normalizedPhone,
-        email: data.email && data.email.trim() ? data.email.toLowerCase().trim() : '',
+        email: data.email && data.email.trim() ? data.email.toLowerCase().trim() : null,
         passwordHash,
         role: data.role,
         agencyId: data.agencyId || null,
@@ -122,24 +126,24 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      message: 'Registration successful',
-      user,
-    }, { status: 201 });
-
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'Registration successful',
+        user,
+      },
+      { status: 201 }
+    );
   } catch (error) {
+    console.error('Registration error:', error);
+
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid input', details: error.errors },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid input', details: error.errors }, { status: 400 });
     }
 
-    return NextResponse.json(
-      { error: 'Registration failed. Please try again.' },
-      { status: 500 }
-    );
+    // Return more specific error message if available
+    const errorMessage =
+      error instanceof Error ? error.message : 'Registration failed. Please try again.';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
-

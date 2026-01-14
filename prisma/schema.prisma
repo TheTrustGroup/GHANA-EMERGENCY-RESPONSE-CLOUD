@@ -17,13 +17,13 @@ model agencies {
   address              String
   region               String
   district             String
+  isActive             Boolean                @default(true)
   latitude             Float
   longitude            Float
-  coverageRadius       Float                  @default(50)
-  isActive             Boolean                @default(true)
-  capacity             Int                    @default(10)
   createdAt            DateTime               @default(now())
   updatedAt            DateTime
+  capacity             Int                    @default(10)
+  coverageRadius       Float                  @default(50)
   dispatch_assignments dispatch_assignments[]
   incidents            incidents[]
   users                users[]
@@ -57,18 +57,18 @@ model dispatch_assignments {
   incidentId       String
   agencyId         String
   responderId      String
-  status           DispatchStatus @default(DISPATCHED)
   priority         Int            @default(3)
-  dispatchNotes    String?
-  completionNotes  String?
-  currentLatitude  Float?
-  currentLongitude Float?
-  createdAt        DateTime       @default(now())
   dispatchedAt     DateTime       @default(now())
   acceptedAt       DateTime?
-  enRouteAt        DateTime?
   arrivedAt        DateTime?
   completedAt      DateTime?
+  completionNotes  String?
+  createdAt        DateTime       @default(now())
+  currentLatitude  Float?
+  currentLongitude Float?
+  dispatchNotes    String?
+  enRouteAt        DateTime?
+  status           DispatchStatus @default(DISPATCHED)
   agencies         agencies       @relation(fields: [agencyId], references: [id])
   incidents        incidents      @relation(fields: [incidentId], references: [id], onDelete: Cascade)
   users            users          @relation(fields: [responderId], references: [id])
@@ -83,10 +83,10 @@ model incident_updates {
   id         String     @id
   incidentId String
   userId     String
-  updateType UpdateType
   content    String
   metadata   Json?
   createdAt  DateTime   @default(now())
+  updateType UpdateType
   incidents  incidents  @relation(fields: [incidentId], references: [id], onDelete: Cascade)
   users      users      @relation(fields: [userId], references: [id])
 
@@ -96,30 +96,30 @@ model incident_updates {
 
 model incidents {
   id                      String                 @id
-  category                IncidentCategory
-  severity                IncidentSeverity
-  status                  IncidentStatus         @default(REPORTED)
   title                   String
   description             String?
+  severity                IncidentSeverity
+  status                  IncidentStatus         @default(REPORTED)
   latitude                Float
   longitude               Float
   address                 String?
   region                  String
   district                String
-  mediaUrls               String[]
   reportedById            String?
-  reporterPhone           String?
-  reporterName            String?
   assignedAgencyId        String?
-  priority                Int                    @default(3)
+  mediaUrls               String[]
   estimatedAffectedPeople Int?
   responseTime            Int?
-  resolutionTime          Int?
+  resolvedAt              DateTime?
+  closedAt                DateTime?
   createdAt               DateTime               @default(now())
   updatedAt               DateTime
   dispatchedAt            DateTime?
-  resolvedAt              DateTime?
-  closedAt                DateTime?
+  priority                Int                    @default(3)
+  reporterName            String?
+  reporterPhone           String?
+  resolutionTime          Int?
+  category                IncidentCategory
   dispatch_assignments    dispatch_assignments[]
   incident_updates        incident_updates[]
   agencies                agencies?              @relation(fields: [assignedAgencyId], references: [id])
@@ -155,14 +155,14 @@ model notifications {
   userId            String
   title             String
   message           String
-  type              NotificationType
+  isRead            Boolean          @default(false)
   relatedEntityType String?
   relatedEntityId   String?
-  isRead            Boolean          @default(false)
   sentViaSms        Boolean          @default(false)
-  sentViaPush       Boolean          @default(false)
   createdAt         DateTime         @default(now())
   readAt            DateTime?
+  sentViaPush       Boolean          @default(false)
+  type              NotificationType
   users             users            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([createdAt])
@@ -172,7 +172,7 @@ model notifications {
 
 model users {
   id                   String                 @id
-  email                String                 @unique
+  email                String?                @unique
   phone                String?                @unique
   name                 String
   passwordHash         String
@@ -181,13 +181,13 @@ model users {
   isActive             Boolean                @default(true)
   emailVerified        DateTime?
   phoneVerified        DateTime?
-  lastLatitude         Float?
-  lastLongitude        Float?
-  lastLocationUpdate   DateTime?
-  status               UserStatus             @default(AVAILABLE)
   createdAt            DateTime               @default(now())
   updatedAt            DateTime
   lastLoginAt          DateTime?
+  lastLatitude         Float?
+  lastLocationUpdate   DateTime?
+  lastLongitude        Float?
+  status               UserStatus             @default(AVAILABLE)
   audit_logs           audit_logs[]
   dispatch_assignments dispatch_assignments[]
   incident_updates     incident_updates[]

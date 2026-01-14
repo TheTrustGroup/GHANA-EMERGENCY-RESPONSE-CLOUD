@@ -148,7 +148,7 @@ function SignInContent() {
                     e.preventDefault();
                     setUsePhone(!usePhone);
                   }}
-                  className="text-left text-xs font-medium text-blue-600 hover:text-blue-700 active:text-blue-800 underline sm:text-right sm:text-sm"
+                  className="text-left text-xs font-medium text-blue-600 underline hover:text-blue-700 active:text-blue-800 sm:text-right sm:text-sm"
                 >
                   Use {usePhone ? 'Email' : 'Phone'} instead
                 </button>

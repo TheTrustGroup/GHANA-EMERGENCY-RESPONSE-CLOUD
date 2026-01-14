@@ -12,4 +12,3 @@ export { handler as GET, handler as POST };
 
 // Force dynamic rendering for auth routes
 export const dynamic = 'force-dynamic';
-

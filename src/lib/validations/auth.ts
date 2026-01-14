@@ -45,7 +45,7 @@ export type LoginInput = z.infer<typeof loginSchema>;
 export const registerSchema = z
   .object({
     name: z.string().min(2, 'Name must be at least 2 characters'),
-    email: z.string().email('Please enter a valid email address'),
+    email: z.string().email('Please enter a valid email address').optional().or(z.literal('')),
     phone: z
       .string()
       .regex(ghanaPhoneRegex, 'Please enter a valid Ghana phone number (+233XXXXXXXXX)'),

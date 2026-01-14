@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { trpc } from '@/lib/trpc/client';
+import { getRobustLocation } from '@/lib/geolocation/robust-geolocation';
 
 // Set Mapbox access token
 if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_MAPBOX_TOKEN) {
@@ -223,42 +224,60 @@ export function LocationPicker({
     }
   };
 
-  // Use current location
-  const handleUseCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      alert('Geolocation is not supported by your browser');
-      return;
-    }
-
+  // Use current location with robust fallback strategies
+  const handleUseCurrentLocation = async () => {
     setIsGeolocating(true);
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude: lat, longitude: lng, accuracy } = position.coords;
-        setGpsAccuracy(accuracy);
-
-        if (map.current) {
-          map.current.flyTo({
-            center: [lng, lat],
-            zoom: 15,
-          });
-        }
-
-        marker.current?.setLngLat([lng, lat]);
-        reverseGeocode(lat, lng);
-        setIsGeolocating(false);
-      },
-      (error) => {
-        console.error('Geolocation error:', error);
-        alert('Unable to get your location. Please select on the map.');
-        setIsGeolocating(false);
-      },
-      {
+    try {
+      // Use robust geolocation with multiple fallback strategies
+      const location = await getRobustLocation({
         enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
+        timeout: 20000, // 20 seconds
+        maximumAge: 300000, // 5 minutes - allow cached
+        retries: 3, // Retry 3 times
+        retryDelay: 1000, // 1 second between retries
+      });
+
+      const { latitude: lat, longitude: lng, accuracy } = location;
+      setGpsAccuracy(accuracy);
+
+      if (map.current) {
+        map.current.flyTo({
+          center: [lng, lat],
+          zoom: location.source === 'ip' ? 12 : 15, // Less zoom for IP-based
+        });
       }
-    );
+
+      marker.current?.setLngLat([lng, lat]);
+      reverseGeocode(lat, lng);
+    } catch (error: any) {
+      console.error('Geolocation error:', error);
+      
+      // Provide helpful error messages
+      let errorMessage = 'Unable to get your location. ';
+      if (error?.message?.includes('permission')) {
+        errorMessage += 'Location permission was denied. Please enable location access in your browser settings, or click on the map to set your location manually.';
+      } else if (error?.message?.includes('unavailable')) {
+        errorMessage += 'Location information is unavailable. Please click on the map to set your location manually.';
+      } else if (error?.message?.includes('timeout')) {
+        errorMessage += 'Location request timed out. Please try again or click on the map to set your location manually.';
+      } else {
+        errorMessage += 'Please click on the map to set your location manually.';
+      }
+      
+      // Log warning but don't block user
+      console.warn(errorMessage);
+      
+      // Zoom to default location so user can still interact with map
+      if (map.current) {
+        map.current.flyTo({
+          center: [longitude, latitude],
+          zoom: 13,
+        });
+      }
+    } finally {
+      setIsGeolocating(false);
+    }
   };
 
   return (

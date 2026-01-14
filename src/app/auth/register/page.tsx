@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { registerSchema, type RegisterInput } from '@/lib/validations/auth';
 import { Button } from '@/components/ui/button';
@@ -90,6 +90,7 @@ export default function RegisterPage() {
     handleSubmit,
     watch,
     setValue,
+    control,
     formState: { errors },
     trigger,
   } = useForm<RegisterInput>({
@@ -166,17 +167,25 @@ export default function RegisterPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: data.name,
-          email: data.email,
+          email: data.email && data.email.trim() ? data.email : undefined,
           phone: data.phone,
           password: data.password,
           role: data.role,
-          agencyId: data.agencyId || null,
+          agencyId: data.agencyId || undefined,
+          termsAccepted: data.termsAccepted, // Include terms acceptance
         }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
+        // Show detailed validation errors if available
+        if (result.details && Array.isArray(result.details)) {
+          const errorMessages = result.details.map((err: any) => 
+            `${err.path.join('.')}: ${err.message}`
+          ).join(', ');
+          throw new Error(errorMessages || result.error || 'Registration failed');
+        }
         throw new Error(result.error || 'Registration failed');
       }
 
@@ -189,10 +198,12 @@ export default function RegisterPage() {
         router.push('/auth/register/success');
       }
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Registration failed. Please try again.'
-      );
+      const errorMessage = err instanceof Error ? err.message : 'Registration failed. Please try again.';
+      setError(errorMessage);
       setIsLoading(false);
+      
+      // Scroll to top to show error
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -385,20 +396,36 @@ export default function RegisterPage() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex items-start space-x-2">
-                    <Checkbox
-                      id="termsAccepted"
-                      {...register('termsAccepted')}
-                      className="mt-1"
+                    <Controller
+                      name="termsAccepted"
+                      control={control}
+                      render={({ field }) => (
+                        <Checkbox
+                          id="termsAccepted"
+                          checked={field.value}
+                          onCheckedChange={(checked) => {
+                            field.onChange(checked === true);
+                            // Trigger validation immediately
+                            trigger('termsAccepted');
+                          }}
+                          className="mt-1"
+                        />
+                      )}
                     />
                     <Label
                       htmlFor="termsAccepted"
                       className="text-sm font-normal cursor-pointer leading-relaxed"
+                      onClick={() => {
+                        const currentValue = watch('termsAccepted');
+                        setValue('termsAccepted', !currentValue, { shouldValidate: true });
+                      }}
                     >
                       I agree to the{' '}
                       <Link
                         href="/terms"
                         className="text-blue-600 hover:underline"
                         target="_blank"
+                        onClick={(e) => e.stopPropagation()}
                       >
                         Terms of Service
                       </Link>{' '}
@@ -407,6 +434,7 @@ export default function RegisterPage() {
                         href="/privacy"
                         className="text-blue-600 hover:underline"
                         target="_blank"
+                        onClick={(e) => e.stopPropagation()}
                       >
                         Privacy Policy
                       </Link>
