@@ -3,6 +3,9 @@
   "devCommand": "next dev",
   "installCommand": "npm install",
   "framework": "nextjs",
+  "git": {
+    "deploymentEnabled": false
+  },
   "headers": [
     {
       "source": "/api/(.*)",
