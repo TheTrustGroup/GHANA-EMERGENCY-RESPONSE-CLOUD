@@ -43,11 +43,11 @@ function SignInContent() {
     setError(null);
 
     try {
-      // Normalize identifier - lowercase email, keep phone as-is (server will format it)
+      // Normalize identifier - always lowercase emails, format phones
       let identifier = data.identifier.trim();
 
-      // Only lowercase if it's an email (contains @)
-      if (!usePhone && identifier.includes('@')) {
+      // Always lowercase emails (regardless of usePhone toggle)
+      if (identifier.includes('@')) {
         identifier = identifier.toLowerCase();
       }
 

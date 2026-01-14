@@ -231,6 +231,17 @@ export async function validateCredentials(
     );
 
     // Try to find user by email (case-insensitive) or phone
+    // For phone, try multiple formats to handle various input formats
+    const phoneFormats = isEmail
+      ? []
+      : [
+          normalizedIdentifier, // Formatted phone (+233...)
+          identifier, // Original input
+          identifier.replace(/\D/g, ''), // Digits only
+          identifier.startsWith('0') ? `+233${identifier.substring(1)}` : undefined, // Local format
+          identifier.startsWith('233') ? `+${identifier}` : undefined, // Without +
+        ].filter((f): f is string => !!f);
+
     const user = await prisma.users.findFirst({
       where: {
         OR: isEmail
@@ -238,12 +249,7 @@ export async function validateCredentials(
               // For email, use exact lowercase match
               { email: normalizedIdentifier },
             ]
-          : [
-              // For phone, try exact match (already formatted)
-              { phone: identifier },
-              // Also try with normalized (in case it wasn't formatted)
-              { phone: normalizedIdentifier },
-            ],
+          : phoneFormats.map((phone) => ({ phone })), // Try all phone formats
         isActive: true,
       },
     });

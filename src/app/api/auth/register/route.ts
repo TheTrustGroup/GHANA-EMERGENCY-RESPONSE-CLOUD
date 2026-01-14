@@ -31,8 +31,7 @@ const registerSchema = z.object({
     .boolean()
     .refine((val) => val === true, {
       message: 'You must accept the terms of service',
-    })
-    .optional(), // Accept terms acceptance (optional for backward compatibility)
+    }), // Required - users must accept terms
 });
 
 export async function POST(request: NextRequest) {

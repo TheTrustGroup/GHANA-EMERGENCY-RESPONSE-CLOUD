@@ -161,13 +161,20 @@ export default function RegisterPage() {
     setError(null);
 
     try {
+      // Validate terms acceptance before submitting
+      if (!data.termsAccepted) {
+        setError('You must accept the terms of service to continue.');
+        setIsLoading(false);
+        return;
+      }
+
       // Create user account (password will be hashed on server)
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: data.name,
-          email: data.email && data.email.trim() ? data.email : undefined,
+          email: data.email && data.email.trim() ? data.email.toLowerCase().trim() : undefined,
           phone: data.phone,
           password: data.password,
           role: data.role,
