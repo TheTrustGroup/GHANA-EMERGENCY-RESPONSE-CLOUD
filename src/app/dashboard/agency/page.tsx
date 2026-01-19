@@ -33,6 +33,7 @@ import {
 import { motion } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
 import { ClientOnly } from '@/components/ui/ClientOnly';
+import { AgencyLogo } from '@/components/agency/AgencyLogo';
 
 export default function AgencyAdminDashboard() {
   const { data: session } = useSession();
@@ -61,14 +62,29 @@ export default function AgencyAdminDashboard() {
         <div className="mx-auto max-w-7xl px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: 'spring', stiffness: 200 }}
-                className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 shadow-lg shadow-blue-500/50"
-              >
-                <Shield className="h-7 w-7 text-white" />
-              </motion.div>
+              {stats?.agency ? (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 200 }}
+                >
+                  <AgencyLogo
+                    agencyName={stats.agency.name}
+                    agencyType={stats.agency.type}
+                    size="lg"
+                    className="rounded-2xl shadow-lg shadow-blue-500/50"
+                  />
+                </motion.div>
+              ) : (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 200 }}
+                  className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 shadow-lg shadow-blue-500/50"
+                >
+                  <Shield className="h-7 w-7 text-white" />
+                </motion.div>
+              )}
               <div>
                 <h1 className="text-2xl font-black text-gray-900">
                   {stats?.agency.name || 'Agency Dashboard'}
