@@ -22,46 +22,49 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       {/* Hero Section with Background */}
-      <section className="relative h-screen">
-        {/* Background Image */}
-        <div
-          className="absolute inset-0 z-0"
-          style={{
-            backgroundImage: "url('/images/backgrounds/home-hero.jpg')",
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundAttachment: 'fixed',
-          }}
-        />
+      <section className="relative flex min-h-screen items-center">
+        {/* Background - Solid blue as shown in image */}
+        <div className="absolute inset-0 z-0 bg-gradient-to-br from-blue-700 via-blue-800 to-blue-900" />
 
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 z-10 bg-gradient-to-br from-blue-900/90 via-blue-800/80 to-slate-900/90" />
+        {/* Optional subtle pattern overlay */}
+        <div className="absolute inset-0 z-10 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.03)_0%,transparent_50%)]" />
 
         {/* Content */}
-        <div className="relative z-20 flex h-full items-center justify-center px-4">
-          <div className="max-w-4xl text-center text-white">
+        <div className="relative z-20 flex h-full items-center justify-center px-4 sm:px-6">
+          <div className="w-full max-w-4xl text-center text-white">
             {/* Badge */}
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm backdrop-blur-sm">
-              <AlertCircle className="h-4 w-4" />
+            <div className="mb-8 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs sm:text-sm backdrop-blur-sm">
+              <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>Powered by the Government of Ghana</span>
             </div>
 
-            {/* Main Heading */}
-            <h1 className="mb-6 text-5xl font-bold leading-tight md:text-6xl lg:text-7xl">
-              Ghana Emergency Response Platform
+            {/* Main Heading - Better line breaks */}
+            <h1 className="mb-8 text-4xl font-black leading-[1.1] tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
+              <span className="block">Ghana</span>
+              <span className="block">Emergency</span>
+              <span className="block">Response</span>
+              <span className="block">Platform</span>
             </h1>
 
-            {/* Description */}
-            <p className="mb-8 text-xl text-blue-100 md:text-2xl">
-              Rapid response. Coordinated action. Lives saved.
-              <br />
-              Connecting citizens, responders, and agencies in real-time.
+            {/* Description - Better spacing */}
+            <p className="mx-auto mb-12 max-w-2xl text-lg leading-relaxed text-blue-50 sm:text-xl md:text-2xl">
+              <span className="block sm:inline">Rapid response.</span>{' '}
+              <span className="block sm:inline">Coordinated action.</span>{' '}
+              <span className="block sm:inline">Lives saved.</span>
+              <br className="hidden sm:block" />
+              <span className="mt-2 block text-base sm:text-lg md:text-xl">
+                Connecting citizens, responders, and agencies in real-time.
+              </span>
             </p>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
-              <Button size="lg" asChild className="bg-red-600 text-white hover:bg-red-700">
-                <Link href="/dashboard/incidents/new">
+            {/* CTA Buttons - Better spacing */}
+            <div className="mb-16 flex flex-col gap-4 sm:flex-row sm:justify-center">
+              <Button 
+                size="lg" 
+                asChild 
+                className="bg-red-600 px-8 py-6 text-base font-semibold text-white shadow-lg hover:bg-red-700 sm:px-10 sm:py-7 sm:text-lg"
+              >
+                <Link href="/report">
                   <AlertCircle className="mr-2 h-5 w-5" />
                   Report Emergency
                 </Link>
@@ -70,32 +73,32 @@ export default function Home() {
                 size="lg"
                 variant="outline"
                 asChild
-                className="border-white/20 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20"
+                className="border-2 border-white/30 bg-white/10 px-8 py-6 text-base font-semibold text-white backdrop-blur-sm hover:bg-white/20 sm:px-10 sm:py-7 sm:text-lg"
               >
                 <Link href="/auth/signin">Sign In</Link>
               </Button>
             </div>
 
-            {/* Stats */}
-            <div className="mt-16 grid grid-cols-3 gap-8 border-t border-white/20 pt-8">
-              <div>
-                <div className="text-3xl font-bold">24/7</div>
-                <div className="text-sm text-blue-200">Available</div>
+            {/* Stats - Better spacing and alignment */}
+            <div className="mx-auto mt-auto grid max-w-2xl grid-cols-3 gap-6 border-t border-white/20 pt-8 sm:gap-8">
+              <div className="flex flex-col items-center">
+                <div className="mb-2 text-2xl font-bold sm:text-3xl md:text-4xl">24/7</div>
+                <div className="text-xs text-blue-200 sm:text-sm">Available</div>
               </div>
-              <div>
-                <div className="text-3xl font-bold">&lt;5 min</div>
-                <div className="text-sm text-blue-200">Response Time</div>
+              <div className="flex flex-col items-center">
+                <div className="mb-2 text-2xl font-bold sm:text-3xl md:text-4xl">&lt;5 min</div>
+                <div className="text-xs text-blue-200 sm:text-sm">Response Time</div>
               </div>
-              <div>
-                <div className="text-3xl font-bold">100+</div>
-                <div className="text-sm text-blue-200">Agencies</div>
+              <div className="flex flex-col items-center">
+                <div className="mb-2 text-2xl font-bold sm:text-3xl md:text-4xl">100+</div>
+                <div className="text-xs text-blue-200 sm:text-sm">Agencies</div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-8 left-1/2 z-20 -translate-x-1/2 animate-bounce">
+        {/* Scroll Indicator - Only show on desktop */}
+        <div className="absolute bottom-8 left-1/2 z-20 hidden -translate-x-1/2 animate-bounce md:block">
           <div className="h-12 w-8 rounded-full border-2 border-white/50 p-2">
             <div className="h-3 w-3 rounded-full bg-white/50" />
           </div>
@@ -103,9 +106,9 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section className="bg-white py-20">
-        <div className="container mx-auto px-4">
-          <h2 className="mb-12 text-center text-4xl font-bold text-slate-900">Key Features</h2>
+      <section className="bg-white py-16 sm:py-20">
+        <div className="container mx-auto px-4 sm:px-6">
+          <h2 className="mb-12 text-center text-3xl font-bold text-slate-900 sm:text-4xl">Key Features</h2>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <Card>
               <CardHeader>
@@ -187,9 +190,9 @@ export default function Home() {
       </section>
 
       {/* How It Works Section */}
-      <section className="bg-white py-20">
-        <div className="container mx-auto px-4">
-          <h2 className="mb-12 text-center text-4xl font-bold text-slate-900">How It Works</h2>
+      <section className="bg-white py-16 sm:py-20">
+        <div className="container mx-auto px-4 sm:px-6">
+          <h2 className="mb-12 text-center text-3xl font-bold text-slate-900 sm:text-4xl">How It Works</h2>
 
           <div className="grid gap-8 md:grid-cols-3">
             <div className="text-center">
@@ -226,10 +229,10 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-blue-900 px-4 py-20 text-white">
-        <div className="mx-auto max-w-4xl space-y-6 text-center">
-          <h2 className="text-3xl font-bold md:text-4xl">Ready to Get Started?</h2>
-          <p className="text-xl text-blue-100">
+      <section className="bg-blue-900 px-4 py-16 text-white sm:px-6 sm:py-20">
+        <div className="mx-auto max-w-4xl space-y-8 text-center">
+          <h2 className="text-2xl font-bold sm:text-3xl md:text-4xl">Ready to Get Started?</h2>
+          <p className="mx-auto max-w-2xl text-lg text-blue-100 sm:text-xl">
             Join the Ghana Emergency Response Platform today and help make our communities safer.
           </p>
           <div className="flex flex-col justify-center gap-4 pt-4 sm:flex-row">
