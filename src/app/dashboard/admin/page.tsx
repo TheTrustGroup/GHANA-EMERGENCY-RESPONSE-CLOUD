@@ -1,9 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { trpc } from '@/lib/trpc/client';
+import { useIncidentUpdates } from '@/lib/realtime/pusher-client';
 import { Button } from '@/components/ui/premium/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/premium/Card';
+import { LiveIncidentMap } from '@/components/maps/LiveIncidentMap';
+import { ClientOnly } from '@/components/ui/ClientOnly';
 import {
   Activity,
   AlertTriangle,
@@ -15,20 +18,56 @@ import {
   Zap,
   Users,
   Building2,
-  Eye,
-  Settings
+  Settings,
+  MapPin
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function SystemAdminMissionControl() {
   const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d'>('24h');
+  const [selectedIncidentId, setSelectedIncidentId] = useState<string | undefined>();
+  const [showAgencies, setShowAgencies] = useState(true);
+  const [showResponders, setShowResponders] = useState(true);
+  
+  // Check if Mapbox token is available
+  const hasMapboxToken = typeof window !== 'undefined' && !!process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
   const { data: systemStats, refetch } = trpc.system.getSystemStats.useQuery({ timeRange });
   const { data: systemHealth } = trpc.system.getHealth.useQuery(undefined, {
     refetchInterval: 10000,
   });
 
+  // Fetch incidents for map
+  const { data: mapIncidents, refetch: refetchIncidents } = trpc.incidents.getActiveForMap.useQuery(
+    undefined,
+    { refetchInterval: 15000 } // Refresh every 15 seconds
+  );
+
+  // Fetch agencies for map
+  const { data: agencies } = trpc.agencies.getAll.useQuery(undefined, {
+    refetchInterval: 30000,
+  });
+
+  // Real-time incident updates
+  useIncidentUpdates(useCallback((data: any) => {
+    refetchIncidents();
+    if (data.severity === 'CRITICAL') {
+      toast.error('🚨 CRITICAL INCIDENT', {
+        description: data.title,
+        duration: 10000,
+        className: 'bg-red-900 text-white border-red-700',
+      });
+    }
+  }, [refetchIncidents]));
+
   const criticalCount = systemStats?.critical || 0;
   const incidentChange = systemStats?.incidentChange || 0;
+
+  // Handle incident click on map
+  const handleIncidentClick = useCallback((incident: any) => {
+    setSelectedIncidentId(incident.id);
+    // Could navigate to incident detail page or show modal
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-950">
@@ -221,13 +260,125 @@ export default function SystemAdminMissionControl() {
             </CardContent>
           </Card>
 
-          {/* Placeholder for map */}
-          <div className="col-span-2 flex items-center justify-center rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <div className="text-center text-slate-600">
-              <Eye className="mx-auto mb-4 h-16 w-16 opacity-20" />
-              <p className="font-semibold">Live Map View</p>
-              <p className="mt-1 text-sm opacity-60">Integrate your map component here</p>
+          {/* Live Map View */}
+          <div className="col-span-2 relative rounded-2xl border border-slate-800 bg-slate-900 overflow-hidden" style={{ minHeight: '500px', height: '500px' }}>
+            {!hasMapboxToken ? (
+              <div className="flex h-full items-center justify-center">
+                <div className="text-center text-slate-600 max-w-md p-6">
+                  <MapPin className="mx-auto mb-4 h-16 w-16 opacity-20" />
+                  <p className="font-semibold text-white mb-2">Mapbox Token Required</p>
+                  <p className="text-sm opacity-60 mb-4">
+                    Please configure NEXT_PUBLIC_MAPBOX_TOKEN in your environment variables to enable the map view.
+                  </p>
+                  <p className="text-xs opacity-40">
+                    Get your token at: https://account.mapbox.com/access-tokens/
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <ClientOnly
+                fallback={
+                  <div className="flex h-full items-center justify-center">
+                    <div className="text-center text-slate-600">
+                      <MapPin className="mx-auto mb-4 h-16 w-16 opacity-20" />
+                      <p className="font-semibold">Loading Map...</p>
+                      <p className="mt-1 text-sm opacity-60">Initializing map component</p>
+                    </div>
+                  </div>
+                }
+              >
+                <LiveIncidentMap
+                incidents={(mapIncidents || []).map((inc) => ({
+                  id: inc.id,
+                  title: inc.title || 'Emergency Report',
+                  severity: inc.severity,
+                  status: inc.status,
+                  category: inc.category,
+                  latitude: inc.latitude,
+                  longitude: inc.longitude,
+                  createdAt: new Date(inc.createdAt),
+                  district: '',
+                  region: '',
+                }))}
+                agencies={showAgencies ? (agencies || []).map((agency) => ({
+                  id: agency.id,
+                  name: agency.name,
+                  type: agency.type,
+                  latitude: agency.latitude,
+                  longitude: agency.longitude,
+                })) : []}
+                selectedIncidentId={selectedIncidentId}
+                showAgencies={showAgencies}
+                showResponders={showResponders}
+                onIncidentClick={handleIncidentClick}
+                className="h-full w-full"
+                  center={[-0.1870, 5.6037]} // Accra, Ghana
+                  zoom={10}
+                />
+              </ClientOnly>
+            )}
+            
+            {/* Map Overlay Controls */}
+            <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowAgencies(!showAgencies)}
+                className={`border border-slate-700 bg-slate-900/90 text-white backdrop-blur-sm hover:bg-slate-800 ${
+                  showAgencies ? 'bg-blue-600/90 hover:bg-blue-700' : ''
+                }`}
+                icon={<Building2 className="h-4 w-4" />}
+              >
+                {showAgencies ? 'Hide' : 'Show'} Agencies
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowResponders(!showResponders)}
+                className={`border border-slate-700 bg-slate-900/90 text-white backdrop-blur-sm hover:bg-slate-800 ${
+                  showResponders ? 'bg-green-600/90 hover:bg-green-700' : ''
+                }`}
+                icon={<Users className="h-4 w-4" />}
+              >
+                {showResponders ? 'Hide' : 'Show'} Responders
+              </Button>
             </div>
+
+            {/* Map Stats Overlay */}
+            {mapIncidents && mapIncidents.length > 0 && (
+              <div className="absolute bottom-4 left-4 z-10">
+                <Card className="border-slate-700 bg-slate-900/95 backdrop-blur-sm">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-4 text-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="h-3 w-3 rounded-full bg-red-500 animate-pulse" />
+                        <span className="text-white font-semibold">
+                          {mapIncidents.filter(i => i.severity === 'CRITICAL').length} Critical
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="h-3 w-3 rounded-full bg-orange-500" />
+                        <span className="text-slate-300">
+                          {mapIncidents.filter(i => i.severity === 'HIGH').length} High
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="h-3 w-3 rounded-full bg-yellow-500" />
+                        <span className="text-slate-300">
+                          {mapIncidents.filter(i => i.severity === 'MEDIUM').length} Medium
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-slate-400" />
+                        <span className="text-slate-400">
+                          {mapIncidents.length} Total
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </div>
         </div>
       </div>
