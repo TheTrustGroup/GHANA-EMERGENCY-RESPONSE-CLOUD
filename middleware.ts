@@ -41,7 +41,9 @@ export default withAuth(
         if (
           pathname === '/' ||
           pathname.startsWith('/auth') ||
-          pathname.startsWith('/api/webhooks')
+          pathname.startsWith('/api/webhooks') ||
+          pathname.startsWith('/test-agency-logos') ||
+          pathname.startsWith('/report')
         ) {
           return true;
         }
