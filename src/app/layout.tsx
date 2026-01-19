@@ -6,6 +6,7 @@ import { Providers } from '@/components/providers';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as SonnerToaster } from 'sonner';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { SkipLinks } from '@/components/accessibility/SkipLinks';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -28,7 +29,13 @@ export default function RootLayout({
       <body className={inter.className}>
         <ErrorBoundary>
           <Providers>
-            {children}
+            <SkipLinks />
+            <div id="main-content" tabIndex={-1} className="outline-none">
+              {children}
+            </div>
+            <footer id="footer" className="sr-only">
+              <h2>Footer</h2>
+            </footer>
             <Toaster />
             <SonnerToaster position="top-right" richColors />
           </Providers>

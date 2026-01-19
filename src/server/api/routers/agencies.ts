@@ -347,4 +347,44 @@ export const agenciesRouter = createTRPCRouter({
         })),
       };
     }),
+
+  // Search agencies
+  search: publicProcedure
+    .input(
+      z.object({
+        query: z.string().min(2).max(100),
+        limit: z.number().min(1).max(20).default(10),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const searchTerm = input.query.toLowerCase();
+
+      const agencies = await ctx.prisma.agencies.findMany({
+        where: {
+          AND: [
+            { isActive: true },
+            {
+              OR: [
+                { name: { contains: searchTerm, mode: 'insensitive' } },
+                // Enum fields don't support contains, use equals instead
+                // { type: { contains: searchTerm, mode: 'insensitive' } },
+                { region: { contains: searchTerm, mode: 'insensitive' } },
+                { district: { contains: searchTerm, mode: 'insensitive' } },
+              ],
+            },
+          ],
+        },
+        select: {
+          id: true,
+          name: true,
+          type: true,
+          region: true,
+          district: true,
+        },
+        take: input.limit,
+        orderBy: { name: 'asc' },
+      });
+
+      return agencies;
+    }),
 });

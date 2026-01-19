@@ -28,6 +28,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useResponsive } from '@/hooks/useResponsive';
+import { getNavAriaLabel } from '@/lib/accessibility/aria';
 
 interface NavItem {
   label: string;
@@ -157,6 +158,18 @@ const navItems: NavItem[] = [
       UserRole.CITIZEN,
     ],
   },
+  {
+    label: 'Help & Support',
+    href: '/help',
+    icon: FileText,
+    roles: [
+      UserRole.SYSTEM_ADMIN,
+      UserRole.AGENCY_ADMIN,
+      UserRole.DISPATCHER,
+      UserRole.RESPONDER,
+      UserRole.CITIZEN,
+    ],
+  },
 ];
 
 interface SidebarProps {
@@ -196,7 +209,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   }
 
   // Debug logging (remove in production)
-  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {  }
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+    // Debug logging removed
+  }
 
   const handleLogout = async () => {
     await signOut({ callbackUrl: '/auth/signin' });
@@ -218,65 +233,88 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       </div>
 
       {/* Navigation - Premium Styling */}
-      <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-6 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+      <nav
+        id="main-navigation"
+        aria-label="Main navigation"
+        className="flex-1 space-y-1 overflow-y-auto px-4 py-6 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent"
+      >
         {status === 'loading' ? (
-          <div className="space-y-2">
+          <div className="space-y-2" aria-label="Loading navigation">
             {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="h-12 rounded-xl bg-white/5 animate-pulse" />
+              <div key={i} className="h-12 rounded-xl bg-white/5 animate-pulse" aria-hidden="true" />
             ))}
           </div>
         ) : filteredNavItems.length > 0 ? (
-          filteredNavItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
+          <ul className="space-y-1" role="list">
+            {filteredNavItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
 
-            return (
+              return (
+                <li key={item.href} role="none">
+                  <Link
+                    href={item.href}
+                    onClick={isMobile ? onClose : undefined}
+                    aria-label={getNavAriaLabel(item.label, isActive)}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={cn(
+                      'group flex items-center space-x-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200',
+                      'focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-900',
+                      isActive
+                        ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white premium-shadow'
+                        : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                    )}
+                  >
+                    <Icon
+                      className={cn(
+                        'h-5 w-5 transition-transform flex-shrink-0',
+                        isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'
+                      )}
+                      aria-hidden="true"
+                    />
+                    <span className="font-medium">{item.label}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          // Fallback: Always show at least Dashboard and Settings
+          <ul className="space-y-1" role="list">
+            <li role="none">
               <Link
-                key={item.href}
-                href={item.href}
-                onClick={isMobile ? onClose : undefined}
+                href="/dashboard"
+                aria-label={getNavAriaLabel('Dashboard', pathname === '/dashboard' || pathname?.startsWith('/dashboard/'))}
+                aria-current={pathname === '/dashboard' || pathname?.startsWith('/dashboard/') ? 'page' : undefined}
                 className={cn(
                   'group flex items-center space-x-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200',
-                  isActive
+                  'focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-900',
+                  pathname === '/dashboard' || pathname?.startsWith('/dashboard/')
                     ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white premium-shadow'
                     : 'text-slate-300 hover:bg-white/10 hover:text-white'
                 )}
               >
-                <Icon className={cn(
-                  'h-5 w-5 transition-transform flex-shrink-0',
-                  isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'
-                )} />
-                <span className="font-medium">{item.label}</span>
+                <LayoutDashboard className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
+                <span className="font-medium">Dashboard</span>
               </Link>
-            );
-          })
-        ) : (
-          // Fallback: Always show at least Dashboard and Settings
-          <>
-            <Link
-              href="/dashboard"
-              className={cn(
-                'group flex items-center space-x-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200',
-                pathname === '/dashboard' || pathname?.startsWith('/dashboard/')
-                  ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white premium-shadow'
-                  : 'text-slate-300 hover:bg-white/10 hover:text-white'
-              )}
-            >
-              <LayoutDashboard className="h-5 w-5 flex-shrink-0" />
-              <span className="font-medium">Dashboard</span>
-            </Link>
-            <Link
-              href="/dashboard/settings"
-              className={cn(
-                'group flex items-center space-x-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200',
-                pathname === '/dashboard/settings'
-                  ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white premium-shadow'
-                  : 'text-slate-300 hover:bg-white/10 hover:text-white'
-              )}
-            >
-              <Settings className="h-5 w-5 flex-shrink-0" />
-              <span className="font-medium">Settings</span>
-            </Link>
+            </li>
+            <li role="none">
+              <Link
+                href="/dashboard/settings"
+                aria-label={getNavAriaLabel('Settings', pathname === '/dashboard/settings')}
+                aria-current={pathname === '/dashboard/settings' ? 'page' : undefined}
+                className={cn(
+                  'group flex items-center space-x-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200',
+                  'focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-900',
+                  pathname === '/dashboard/settings'
+                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white premium-shadow'
+                    : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                )}
+              >
+                <Settings className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
+                <span className="font-medium">Settings</span>
+              </Link>
+            </li>
             {userRole && (
               <div className="mt-4 pt-4 border-t border-white/10">
                 <p className="text-xs text-slate-500 px-4">
@@ -284,7 +322,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 </p>
               </div>
             )}
-          </>
+          </ul>
         )}
       </nav>
 
@@ -303,13 +341,14 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             </p>
           </div>
         </div>
-        <Button
+          <Button
           variant="ghost"
           size="sm"
           onClick={handleLogout}
-          className="mt-3 w-full justify-start rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition-colors"
+          aria-label="Sign out"
+          className="mt-3 w-full justify-start rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-900"
         >
-          <LogOut className="mr-2 h-4 w-4" />
+          <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />
           <span className="font-medium">Sign out</span>
         </Button>
       </div>

@@ -12,12 +12,12 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, type LoginInput } from '@/lib/validations/auth';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { EnhancedInput } from '@/components/forms/EnhancedInput';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2, Shield, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 
 function SignInContent() {
@@ -120,13 +120,26 @@ function SignInContent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 p-4 sm:p-6">
       <Card className="premium-shadow w-full max-w-md">
-        <CardHeader className="space-y-2 px-4 pt-6 text-center sm:px-6 sm:pt-8">
-          <CardTitle className="text-2xl font-bold leading-tight text-blue-900 sm:text-3xl md:text-4xl">
-            Ghana Emergency Response
-          </CardTitle>
-          <CardDescription className="text-sm sm:text-base">
-            Sign in to your account
-          </CardDescription>
+        <CardHeader className="space-y-4 px-4 pt-6 text-center sm:px-6 sm:pt-8">
+          <div className="flex justify-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg">
+              <Shield className="h-9 w-9 text-white" aria-hidden="true" />
+            </div>
+          </div>
+          <div>
+            <CardTitle className="text-2xl font-bold leading-tight text-blue-900 sm:text-3xl md:text-4xl">
+              Ghana Emergency Response
+            </CardTitle>
+            <CardDescription className="mt-2 text-sm sm:text-base">
+              Official Government Platform
+            </CardDescription>
+          </div>
+          <div className="flex justify-center pt-2">
+            <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+              <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+              <span>Secure & Verified</span>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="px-4 pb-6 sm:px-6 sm:pb-8">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5">
@@ -139,9 +152,9 @@ function SignInContent() {
 
             <div className="space-y-2">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <Label htmlFor="identifier" className="text-sm sm:text-base">
+                <span className="text-sm sm:text-base font-medium">
                   {usePhone ? 'Phone Number' : 'Email'}
-                </Label>
+                </span>
                 <button
                   type="button"
                   onClick={(e) => {
@@ -153,31 +166,27 @@ function SignInContent() {
                   Use {usePhone ? 'Email' : 'Phone'} instead
                 </button>
               </div>
-              <Input
-                id="identifier"
+              <EnhancedInput
+                label={usePhone ? 'Phone Number' : 'Email'}
                 type={usePhone ? 'tel' : 'email'}
                 placeholder={usePhone ? '+233501234567 or 0501234567' : 'email@example.com'}
-                className="text-sm sm:text-base"
-                {...register('identifier')}
+                required
+                error={errors.identifier?.message}
+                helpText={
+                  usePhone
+                    ? 'Enter your phone number with country code (+233) or local format (0XX)'
+                    : undefined
+                }
                 disabled={isLoading}
                 autoComplete={usePhone ? 'tel' : 'email'}
                 inputMode={usePhone ? 'tel' : 'email'}
+                {...register('identifier')}
               />
-              {usePhone && (
-                <p className="text-xs text-gray-500 sm:text-sm">
-                  Enter your phone number with country code (+233) or local format (0XX)
-                </p>
-              )}
-              {errors.identifier && (
-                <p className="text-xs text-destructive sm:text-sm">{errors.identifier.message}</p>
-              )}
             </div>
 
             <div className="space-y-2">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <Label htmlFor="password" className="text-sm sm:text-base">
-                  Password
-                </Label>
+                <span className="text-sm sm:text-base font-medium">Password</span>
                 <Link
                   href="/auth/forgot-password"
                   className="text-left text-xs text-blue-600 hover:underline sm:text-right sm:text-sm"
@@ -185,17 +194,16 @@ function SignInContent() {
                   Forgot password?
                 </Link>
               </div>
-              <Input
-                id="password"
+              <EnhancedInput
+                label="Password"
                 type="password"
                 placeholder="Enter your password"
-                className="text-sm sm:text-base"
-                {...register('password')}
+                required
+                showPasswordToggle
+                error={errors.password?.message}
                 disabled={isLoading}
+                {...register('password')}
               />
-              {errors.password && (
-                <p className="text-xs text-destructive sm:text-sm">{errors.password.message}</p>
-              )}
             </div>
 
             <div className="flex items-center space-x-2">

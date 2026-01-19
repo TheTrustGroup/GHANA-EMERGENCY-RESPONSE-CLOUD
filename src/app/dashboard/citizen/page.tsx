@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { haptics } from '@/lib/haptics';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { CitizenOnboarding } from '@/components/onboarding/CitizenOnboarding';
 
 export default function CitizenDashboardApp() {
   const { data: session } = useSession();
@@ -86,6 +87,7 @@ export default function CitizenDashboardApp() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-24">
+      <CitizenOnboarding />
       {/* TOP APP BAR - Glassmorphism */}
       <div className="sticky top-0 z-50 border-b border-gray-200/50 bg-white/80 shadow-sm backdrop-blur-xl">
         <div className="px-4 py-3">
@@ -236,7 +238,7 @@ export default function CitizenDashboardApp() {
             <button className="text-sm font-semibold text-blue-600">See All</button>
           </div>
 
-          <div className="hide-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
+          <div data-tour="quick-contacts" className="hide-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
             <EmergencyContactCard
               icon={Shield}
               name="Police"
@@ -269,7 +271,7 @@ export default function CitizenDashboardApp() {
         </div>
 
         {/* MY REPORTS SECTION */}
-        <div>
+        <div data-tour="my-reports">
           <div className="mb-4 flex items-center justify-between">
             <div>
               <h3 className="text-lg font-black text-gray-900">My Reports</h3>

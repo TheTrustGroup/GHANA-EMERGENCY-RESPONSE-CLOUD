@@ -9,6 +9,7 @@ import { ReactNode } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { Breadcrumbs } from '@/components/accessibility/Breadcrumbs';
 
 interface DashboardShellProps {
   children: ReactNode;
@@ -53,6 +54,9 @@ export function DashboardShell({
 
   return (
     <div className="flex-1 space-y-6 p-6">
+      {/* Breadcrumbs */}
+      <Breadcrumbs className="mb-4" />
+
       {(title || description || actions) && (
         <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0">
           <div className="flex-1">

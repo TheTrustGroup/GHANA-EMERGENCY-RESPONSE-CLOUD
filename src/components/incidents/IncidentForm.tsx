@@ -13,7 +13,8 @@ import { ChevronLeft, ChevronRight, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { EnhancedInput } from '@/components/forms/EnhancedInput';
+import { EnhancedTextarea } from '@/components/forms/EnhancedTextarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -276,49 +277,35 @@ export function IncidentForm({ initialData, onSubmit, onCancel }: IncidentFormPr
         {/* Step 3: Details */}
         {currentStep === 3 && (
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="title">Title *</Label>
-              <Input
-                id="title"
-                {...register('title')}
-                placeholder="Brief description of the incident"
-                maxLength={100}
-              />
-              <p className="mt-1 text-xs text-muted-foreground">
-                {watchedValues.title?.length || 0}/100 characters
-              </p>
-              {errors.title && (
-                <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>
-              )}
-            </div>
+            <EnhancedInput
+              label="Title"
+              placeholder="Brief description of the incident"
+              required
+              maxLength={100}
+              error={errors.title?.message}
+              helpText={`${watchedValues.title?.length || 0}/100 characters`}
+              {...register('title')}
+            />
 
-            <div>
-              <Label htmlFor="description">Description *</Label>
-              <Textarea
-                id="description"
-                {...register('description')}
-                placeholder="Provide detailed information about the incident..."
-                rows={6}
-                maxLength={1000}
-              />
-              <p className="mt-1 text-xs text-muted-foreground">
-                {watchedValues.description?.length || 0}/1000 characters
-              </p>
-              {errors.description && (
-                <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
-              )}
-            </div>
+            <EnhancedTextarea
+              label="Description"
+              placeholder="Provide detailed information about the incident..."
+              required
+              rows={6}
+              maxLength={1000}
+              showCharCount
+              error={errors.description?.message}
+              {...register('description')}
+            />
 
-            <div>
-              <Label htmlFor="estimatedAffectedPeople">Estimated Affected People (Optional)</Label>
-              <Input
-                id="estimatedAffectedPeople"
-                type="number"
-                {...register('estimatedAffectedPeople', { valueAsNumber: true })}
-                placeholder="0"
-                min={1}
-              />
-            </div>
+            <EnhancedInput
+              label="Estimated Affected People"
+              type="number"
+              placeholder="0"
+              min={1}
+              helpText="Optional - approximate number of people affected"
+              {...register('estimatedAffectedPeople', { valueAsNumber: true })}
+            />
 
             <div>
               <Label>Media (Photos/Videos)</Label>

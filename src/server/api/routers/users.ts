@@ -281,4 +281,46 @@ export const usersRouter = createTRPCRouter({
       resolvedReports: 0,
     };
   }),
+
+  // Search users
+  search: protectedProcedure
+    .input(
+      z.object({
+        query: z.string().min(2).max(100),
+        limit: z.number().min(1).max(20).default(10),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      // Only admins can search all users
+      if (ctx.session.user.role !== 'SYSTEM_ADMIN' && ctx.session.user.role !== 'AGENCY_ADMIN') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to search users',
+        });
+      }
+
+      const searchTerm = input.query.toLowerCase();
+
+      const users = await ctx.prisma.users.findMany({
+        where: {
+          OR: [
+            { name: { contains: searchTerm, mode: 'insensitive' } },
+            { email: { contains: searchTerm, mode: 'insensitive' } },
+            { phone: { contains: searchTerm, mode: 'insensitive' } },
+          ],
+          isActive: true,
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          role: true,
+        },
+        take: input.limit,
+        orderBy: { name: 'asc' },
+      });
+
+      return users;
+    }),
 });

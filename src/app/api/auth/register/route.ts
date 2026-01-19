@@ -27,11 +27,9 @@ const registerSchema = z.object({
   role: z.nativeEnum(UserRole).default(UserRole.CITIZEN),
   agencyId: z.string().optional(),
   agencyCode: z.string().optional(), // For agency staff registration
-  termsAccepted: z
-    .boolean()
-    .refine((val) => val === true, {
-      message: 'You must accept the terms of service',
-    }), // Required - users must accept terms
+  termsAccepted: z.boolean().refine((val) => val === true, {
+    message: 'You must accept the terms of service',
+  }), // Required - users must accept terms
 });
 
 export async function POST(request: NextRequest) {

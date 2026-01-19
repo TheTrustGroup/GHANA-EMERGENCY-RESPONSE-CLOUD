@@ -25,6 +25,7 @@ import { IncidentSeverity } from '@prisma/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { RealTimeIndicator } from '@/components/analytics/RealTimeIndicator';
 
 export default function AnalyticsPage() {
   const { data: session } = useSession();
@@ -166,19 +167,26 @@ export default function AnalyticsPage() {
         title="Analytics Dashboard"
         description="Comprehensive analytics and insights"
         actions={
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => handleExport('csv')}>
-              <File className="mr-2 h-4 w-4" />
-              CSV
-            </Button>
-            <Button variant="outline" onClick={() => handleExport('excel')}>
-              <FileSpreadsheet className="mr-2 h-4 w-4" />
-              Excel
-            </Button>
-            <Button variant="outline" onClick={() => handleExport('pdf')}>
-              <FileText className="mr-2 h-4 w-4" />
-              PDF
-            </Button>
+          <div className="flex items-center gap-3">
+            <RealTimeIndicator
+              isLive={true}
+              lastUpdate={new Date()}
+              updateInterval={30000}
+            />
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => handleExport('csv')}>
+                <File className="mr-2 h-4 w-4" />
+                CSV
+              </Button>
+              <Button variant="outline" onClick={() => handleExport('excel')}>
+                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                Excel
+              </Button>
+              <Button variant="outline" onClick={() => handleExport('pdf')}>
+                <FileText className="mr-2 h-4 w-4" />
+                PDF
+              </Button>
+            </div>
           </div>
         }
       >

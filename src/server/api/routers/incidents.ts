@@ -703,4 +703,40 @@ export const incidentsRouter = createTRPCRouter({
 
       return update;
     }),
+
+  // Search incidents
+  search: protectedProcedure
+    .input(
+      z.object({
+        query: z.string().min(2).max(100),
+        limit: z.number().min(1).max(20).default(10),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const searchTerm = input.query.toLowerCase();
+
+      const incidents = await ctx.prisma.incidents.findMany({
+        where: {
+          OR: [
+            { title: { contains: searchTerm, mode: 'insensitive' } },
+            { description: { contains: searchTerm, mode: 'insensitive' } },
+            { address: { contains: searchTerm, mode: 'insensitive' } },
+            { region: { contains: searchTerm, mode: 'insensitive' } },
+            { district: { contains: searchTerm, mode: 'insensitive' } },
+          ],
+        },
+        select: {
+          id: true,
+          title: true,
+          status: true,
+          severity: true,
+          category: true,
+          createdAt: true,
+        },
+        take: input.limit,
+        orderBy: { createdAt: 'desc' },
+      });
+
+      return incidents;
+    }),
 });
